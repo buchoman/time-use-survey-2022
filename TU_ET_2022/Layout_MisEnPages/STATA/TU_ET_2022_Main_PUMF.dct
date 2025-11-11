@@ -1,0 +1,970 @@
+infix dictionary using ??? {
+           PUMFID   1 - 6
+    double WGHT_PER 7 - 16
+           SURVMNTH 17 - 18
+           EQFLAG   19 - 19
+           PRV      20 - 21
+           LUC_RST  22 - 22
+           REGION   23 - 24
+           HSDSIZEC 25 - 25
+           AGEGR10  26 - 27
+           GENDER2  28 - 28
+           MARSTAT  29 - 30
+           PHSDFLG  31 - 31
+           AGEPRC   32 - 33
+           GENPR2   34 - 34
+           COUPGEN2 35 - 35
+           CHH0017C 36 - 36
+           CHH0004C 37 - 37
+           CHH0514C 38 - 38
+           CHH1517C 39 - 39
+           CXRFLAG  40 - 40
+           PARNUM   41 - 41
+           SENFLAG  42 - 42
+           MULTIGEN 43 - 43
+           DDEV_FL  44 - 44
+           DDEX_FL  45 - 45
+           DFLEX_FL 46 - 46
+           DHEAR_FL 47 - 47
+           DLRN_FL  48 - 48
+           DMEM_FL  49 - 49
+           DMENT_FL 50 - 50
+           DMOB_FL  51 - 51
+           DPAIN_FL 52 - 52
+           DUNK_FL  53 - 53
+           DVIS_FL  54 - 54
+           DDIS_FL  55 - 55
+           DTYPER   56 - 56
+           DCLASS   57 - 57
+           TCS_110  58 - 58
+           TCS_120  59 - 59
+           TCS_130  60 - 60
+           TCS_140  61 - 61
+           TCS_150  62 - 62
+           TCS_160  63 - 63
+           TCS_170  64 - 64
+           TCS_180  65 - 65
+           TCS_190  66 - 66
+           TCS_200  67 - 67
+           TIMECR   68 - 69
+           UH_01    70 - 75
+           UH_02    76 - 81
+           UH_03    82 - 87
+           UH_04    88 - 93
+           UH_05    94 - 99
+           UH_06    100 - 105
+           CHLD_01C 106 - 106
+           CHLD_02C 107 - 107
+           CHLD_03C 108 - 108
+           CHLD_04C 109 - 109
+           CHLD_05C 110 - 110
+           CHLD_06C 111 - 111
+           CHLD_07C 112 - 112
+           CHLD_08C 113 - 113
+           LSM_01   114 - 115
+           GEN_01   116 - 116
+           GEN_02   117 - 117
+           SRS_10   118 - 118
+           MSS_130  119 - 120
+           ACT7DAYC 121 - 121
+           MRW_05C  122 - 122
+           MRW_D40A 123 - 123
+           MRW_D40B 124 - 124
+           WET_120  125 - 125
+           WHW_110  126 - 126
+           WHW_230  127 - 128
+           WHWD140G 129 - 130
+           TLWK_01A 131 - 131
+           TLWK_01B 132 - 132
+           TLWK_01C 133 - 133
+           TLWK_01D 134 - 134
+           TLWK_02G 135 - 135
+           TLWK_03  136 - 136
+           TLWK_04  137 - 137
+           TLWK_05  138 - 138
+           TLWK_06  139 - 139
+           TLWK_07  140 - 140
+           TLWK_08  141 - 141
+           TLWK_09  142 - 142
+           WLYD170G 143 - 144
+           NAIC22CY 145 - 146
+           NOCLBR_Y 147 - 148
+           WFS_10   149 - 149
+           SRC_10   150 - 150
+           SRC_20A  151 - 151
+           SRC_20B  152 - 152
+           SRC_20C  153 - 153
+           SRC20EGR 154 - 154
+           SRC_20F  155 - 155
+           SRC20HGR 156 - 156
+           WLB_10   157 - 157
+           WLB_20   158 - 158
+           HRH_10A  159 - 159
+           HRH_10B  160 - 160
+           HRH_10C  161 - 161
+           HRH_10D  162 - 162
+           HRH_10E  163 - 163
+           HRH_10F  164 - 164
+           ATT_120  165 - 165
+           ATT_130  166 - 166
+           ATT_131  167 - 167
+           ATT_140A 168 - 168
+           ATT_140B 169 - 169
+           ATT_140C 170 - 170
+           ATT_140D 171 - 171
+           ATT_140E 172 - 172
+           ATT_150C 173 - 174
+           ATT_160  175 - 175
+           ATT_170  176 - 176
+           ATT_180A 177 - 177
+           ATT_180B 178 - 178
+           ATT_180C 179 - 179
+           ATT_180D 180 - 180
+           ATT_180E 181 - 181
+           ATT_180F 182 - 182
+           ATT_180G 183 - 183
+           ATT_180I 184 - 184
+           ATT_180J 185 - 185
+           CTW_140A 186 - 186
+           CTW_140B 187 - 187
+           CTW_140C 188 - 188
+           CTW_140D 189 - 189
+           CTW_140E 190 - 190
+           CTW140GR 191 - 191
+           CTW_140I 192 - 192
+           CTW_150G 193 - 194
+           CTW_160  195 - 195
+           CTW_170  196 - 196
+           CTW_180  197 - 197
+           CTW_190  198 - 198
+           CTW_210  199 - 199
+           CTW_215  200 - 200
+           ED_05    201 - 202
+           EDC_10   203 - 203
+           MAP_110C 204 - 204
+           MAP_D40A 205 - 205
+           DOR_110C 206 - 206
+           IM_01A   207 - 207
+           YRARRI_C 208 - 208
+           BPP_01A  209 - 209
+           BPR_20   210 - 210
+           ABM_01A  211 - 211
+           AIP_01A  212 - 212
+           VISMINFL 213 - 213
+           VISPRFL  214 - 214
+           REL_02   215 - 215
+           REL_03   216 - 217
+           RELIGFLG 218 - 218
+           LAN_01   219 - 219
+           LANCHC   220 - 220
+           LANHSDC  221 - 221
+           INC_C    222 - 222
+           FAMINC_C 223 - 223
+           GTU_110  224 - 225
+           GTU_130  226 - 227
+           UOT_01   228 - 229
+           DDAY     230 - 231
+           DVTDAY   232 - 232
+           DIARYREC 233 - 233
+           DUR101   234 - 237
+           DUR102   238 - 241
+           DUR103   242 - 245
+           DUR104   246 - 249
+           DUR109   250 - 253
+           DUR126   254 - 257
+           DUR127   258 - 261
+           DUR128   262 - 265
+           DUR129   266 - 269
+           DUR130   270 - 273
+           DUR151   274 - 277
+           DUR152   278 - 281
+           DUR153   282 - 285
+           DUR154   286 - 289
+           DUR159   290 - 293
+           DUR199   294 - 297
+           DUR201   298 - 301
+           DUR202   302 - 305
+           DUR203   306 - 309
+           DUR204   310 - 313
+           DUR205   314 - 317
+           DUR206   318 - 321
+           DUR207   322 - 325
+           DUR208   326 - 329
+           DUR209   330 - 333
+           DUR231   334 - 337
+           DUR232   338 - 341
+           DUR233   342 - 345
+           DUR234   346 - 349
+           DUR235   350 - 353
+           DUR236   354 - 357
+           DUR237   358 - 361
+           DUR238   362 - 365
+           DUR239   366 - 369
+           DUR240   370 - 373
+           DUR241   374 - 377
+           DUR261   378 - 381
+           DUR262   382 - 385
+           DUR263   386 - 389
+           DUR264   390 - 393
+           DUR269   394 - 397
+           DUR299   398 - 401
+           DUR301   402 - 405
+           DUR302   406 - 409
+           DUR303   410 - 413
+           DUR304   414 - 417
+           DUR305   418 - 421
+           DUR306   422 - 425
+           DUR307   426 - 429
+           DUR351   430 - 433
+           DUR352   434 - 437
+           DUR353   438 - 441
+           DUR359   442 - 445
+           DUR399   446 - 449
+           DUR401   450 - 453
+           DUR402   454 - 457
+           DUR403   458 - 461
+           DUR404   462 - 465
+           DUR405   466 - 469
+           DUR406   470 - 473
+           DUR407   474 - 477
+           DUR408   478 - 481
+           DUR409   482 - 485
+           DUR410   486 - 489
+           DUR411   490 - 493
+           DUR412   494 - 497
+           DUR413   498 - 501
+           DUR414   502 - 505
+           DUR415   506 - 509
+           DUR416   510 - 513
+           DUR499   514 - 517
+           DUR501   518 - 521
+           DUR502   522 - 525
+           DUR503   526 - 529
+           DUR504   530 - 533
+           DUR505   534 - 537
+           DUR506   538 - 541
+           DUR599   542 - 545
+           DUR601   546 - 549
+           DUR602   550 - 553
+           DUR603   554 - 557
+           DUR604   558 - 561
+           DUR699   562 - 565
+           DUR701   566 - 569
+           DUR702   570 - 573
+           DUR799   574 - 577
+           DUR801   578 - 581
+           DUR802   582 - 585
+           DUR803   586 - 589
+           DUR804   590 - 593
+           DUR805   594 - 597
+           DUR806   598 - 601
+           DUR807   602 - 605
+           DUR808   606 - 609
+           DUR899   610 - 613
+           DUR901   614 - 617
+           DUR902   618 - 621
+           DUR903   622 - 625
+           DUR999   626 - 629
+           DUR1001  630 - 633
+           DUR1002  634 - 637
+           DUR1004  638 - 641
+           DUR1005  642 - 645
+           DUR1099  646 - 649
+           DUR1101  650 - 653
+           DUR1102  654 - 657
+           DUR1103  658 - 661
+           DUR1104  662 - 665
+           DUR1105  666 - 669
+           DUR1106  670 - 673
+           DUR1199  674 - 677
+           DUR1201  678 - 681
+           DUR1202  682 - 685
+           DUR1203  686 - 689
+           DUR1204  690 - 693
+           DUR1299  694 - 697
+           DUR1301  698 - 701
+           DUR1302  702 - 705
+           DUR1303  706 - 709
+           DUR1304  710 - 713
+           DUR9999  714 - 717
+           DURS01   718 - 721
+           DURS02   722 - 725
+           DURS03   726 - 729
+           DURS04   730 - 733
+           DURS05   734 - 737
+           DURS06   738 - 741
+           DURS07   742 - 745
+           DURS08   746 - 749
+           DURS09   750 - 753
+           DURS10   754 - 757
+           DURS99   758 - 761
+           DURL3300 762 - 765
+           DURL3301 766 - 769
+           DURL3302 770 - 773
+           DURL3303 774 - 777
+           DURL3304 778 - 781
+           DURL3305 782 - 785
+           DURL3306 786 - 789
+           DURL3307 790 - 793
+           DURL3308 794 - 797
+           DURL3309 798 - 801
+           DURL3310 802 - 805
+           DURL3311 806 - 809
+           DURL3312 810 - 813
+           DURL3313 814 - 817
+           DURL3314 818 - 821
+           DURL3315 822 - 825
+           DURL3316 826 - 829
+           DURL3317 830 - 833
+           DURL3318 834 - 837
+           DURL3319 838 - 841
+           DURL3320 842 - 845
+           DURL3323 846 - 849
+           DURL3399 850 - 853
+           DURL9999 854 - 857
+           TUT_970  858 - 858
+           ADLTDUR  859 - 862
+           CHLDDUR  863 - 866
+           CIVICDUR 867 - 870
+           FREEDUR  871 - 874
+           HELPDUR  875 - 878
+           HSWKDUR  879 - 882
+           LEISDUR  883 - 886
+           MEALSDUR 887 - 890
+           MEDIADUR 891 - 894
+           PDWKDUR  895 - 898
+           PERSDUR  899 - 902
+           SCHLDUR  903 - 906
+           SHOPDUR  907 - 910
+           SLEEPDUR 911 - 914
+           SLEEP1D  915 - 918
+    str    SLEEP1S  919 - 922
+           SLEEP2D  923 - 926
+    str    SLEEP2S  927 - 930
+           SOCDUR   931 - 934
+           SPRTSDUR 935 - 938
+           TRANSDUR 939 - 942
+           OTHDUR   943 - 946
+           TOTEPI   947 - 948
+           EPI101   949 - 950
+           EPI102   951 - 952
+           EPI103   953 - 954
+           EPI104   955 - 956
+           EPI109   957 - 958
+           EPI126   959 - 960
+           EPI127   961 - 962
+           EPI128   963 - 964
+           EPI129   965 - 966
+           EPI130   967 - 968
+           EPI151   969 - 970
+           EPI152   971 - 972
+           EPI153   973 - 974
+           EPI154   975 - 976
+           EPI159   977 - 978
+           EPI199   979 - 980
+           EPI201   981 - 982
+           EPI202   983 - 984
+           EPI203   985 - 986
+           EPI204   987 - 988
+           EPI205   989 - 990
+           EPI206   991 - 992
+           EPI207   993 - 994
+           EPI208   995 - 996
+           EPI209   997 - 998
+           EPI231   999 - 1000
+           EPI232   1001 - 1002
+           EPI233   1003 - 1004
+           EPI234   1005 - 1006
+           EPI235   1007 - 1008
+           EPI236   1009 - 1010
+           EPI237   1011 - 1012
+           EPI238   1013 - 1014
+           EPI239   1015 - 1016
+           EPI240   1017 - 1018
+           EPI241   1019 - 1020
+           EPI261   1021 - 1022
+           EPI262   1023 - 1024
+           EPI263   1025 - 1026
+           EPI264   1027 - 1028
+           EPI269   1029 - 1030
+           EPI299   1031 - 1032
+           EPI301   1033 - 1034
+           EPI302   1035 - 1036
+           EPI303   1037 - 1038
+           EPI304   1039 - 1040
+           EPI305   1041 - 1042
+           EPI306   1043 - 1044
+           EPI307   1045 - 1046
+           EPI351   1047 - 1048
+           EPI352   1049 - 1050
+           EPI353   1051 - 1052
+           EPI359   1053 - 1054
+           EPI399   1055 - 1056
+           EPI401   1057 - 1058
+           EPI402   1059 - 1060
+           EPI403   1061 - 1062
+           EPI404   1063 - 1064
+           EPI405   1065 - 1066
+           EPI406   1067 - 1068
+           EPI407   1069 - 1070
+           EPI408   1071 - 1072
+           EPI409   1073 - 1074
+           EPI410   1075 - 1076
+           EPI411   1077 - 1078
+           EPI412   1079 - 1080
+           EPI413   1081 - 1082
+           EPI414   1083 - 1084
+           EPI415   1085 - 1086
+           EPI416   1087 - 1088
+           EPI499   1089 - 1090
+           EPI501   1091 - 1092
+           EPI502   1093 - 1094
+           EPI503   1095 - 1096
+           EPI504   1097 - 1098
+           EPI505   1099 - 1100
+           EPI506   1101 - 1102
+           EPI599   1103 - 1104
+           EPI601   1105 - 1106
+           EPI602   1107 - 1108
+           EPI603   1109 - 1110
+           EPI604   1111 - 1112
+           EPI699   1113 - 1114
+           EPI701   1115 - 1116
+           EPI702   1117 - 1118
+           EPI799   1119 - 1120
+           EPI801   1121 - 1122
+           EPI802   1123 - 1124
+           EPI803   1125 - 1126
+           EPI804   1127 - 1128
+           EPI805   1129 - 1130
+           EPI806   1131 - 1132
+           EPI807   1133 - 1134
+           EPI808   1135 - 1136
+           EPI899   1137 - 1138
+           EPI901   1139 - 1140
+           EPI902   1141 - 1142
+           EPI903   1143 - 1144
+           EPI999   1145 - 1146
+           EPI1001  1147 - 1148
+           EPI1002  1149 - 1150
+           EPI1004  1151 - 1152
+           EPI1005  1153 - 1154
+           EPI1099  1155 - 1156
+           EPI1101  1157 - 1158
+           EPI1102  1159 - 1160
+           EPI1103  1161 - 1162
+           EPI1104  1163 - 1164
+           EPI1105  1165 - 1166
+           EPI1106  1167 - 1168
+           EPI1199  1169 - 1170
+           EPI1201  1171 - 1172
+           EPI1202  1173 - 1174
+           EPI1203  1175 - 1176
+           EPI1204  1177 - 1178
+           EPI1299  1179 - 1180
+           EPI1301  1181 - 1182
+           EPI1302  1183 - 1184
+           EPI1303  1185 - 1186
+           EPI1304  1187 - 1188
+           EPI9999  1189 - 1190
+    double WTBS_001 1191 - 1200
+    double WTBS_002 1201 - 1210
+    double WTBS_003 1211 - 1220
+    double WTBS_004 1221 - 1230
+    double WTBS_005 1231 - 1240
+    double WTBS_006 1241 - 1250
+    double WTBS_007 1251 - 1260
+    double WTBS_008 1261 - 1270
+    double WTBS_009 1271 - 1280
+    double WTBS_010 1281 - 1290
+    double WTBS_011 1291 - 1300
+    double WTBS_012 1301 - 1310
+    double WTBS_013 1311 - 1320
+    double WTBS_014 1321 - 1330
+    double WTBS_015 1331 - 1340
+    double WTBS_016 1341 - 1350
+    double WTBS_017 1351 - 1360
+    double WTBS_018 1361 - 1370
+    double WTBS_019 1371 - 1380
+    double WTBS_020 1381 - 1390
+    double WTBS_021 1391 - 1400
+    double WTBS_022 1401 - 1410
+    double WTBS_023 1411 - 1420
+    double WTBS_024 1421 - 1430
+    double WTBS_025 1431 - 1440
+    double WTBS_026 1441 - 1450
+    double WTBS_027 1451 - 1460
+    double WTBS_028 1461 - 1470
+    double WTBS_029 1471 - 1480
+    double WTBS_030 1481 - 1490
+    double WTBS_031 1491 - 1500
+    double WTBS_032 1501 - 1510
+    double WTBS_033 1511 - 1520
+    double WTBS_034 1521 - 1530
+    double WTBS_035 1531 - 1540
+    double WTBS_036 1541 - 1550
+    double WTBS_037 1551 - 1560
+    double WTBS_038 1561 - 1570
+    double WTBS_039 1571 - 1580
+    double WTBS_040 1581 - 1590
+    double WTBS_041 1591 - 1600
+    double WTBS_042 1601 - 1610
+    double WTBS_043 1611 - 1620
+    double WTBS_044 1621 - 1630
+    double WTBS_045 1631 - 1640
+    double WTBS_046 1641 - 1650
+    double WTBS_047 1651 - 1660
+    double WTBS_048 1661 - 1670
+    double WTBS_049 1671 - 1680
+    double WTBS_050 1681 - 1690
+    double WTBS_051 1691 - 1700
+    double WTBS_052 1701 - 1710
+    double WTBS_053 1711 - 1720
+    double WTBS_054 1721 - 1730
+    double WTBS_055 1731 - 1740
+    double WTBS_056 1741 - 1750
+    double WTBS_057 1751 - 1760
+    double WTBS_058 1761 - 1770
+    double WTBS_059 1771 - 1780
+    double WTBS_060 1781 - 1790
+    double WTBS_061 1791 - 1800
+    double WTBS_062 1801 - 1810
+    double WTBS_063 1811 - 1820
+    double WTBS_064 1821 - 1830
+    double WTBS_065 1831 - 1840
+    double WTBS_066 1841 - 1850
+    double WTBS_067 1851 - 1860
+    double WTBS_068 1861 - 1870
+    double WTBS_069 1871 - 1880
+    double WTBS_070 1881 - 1890
+    double WTBS_071 1891 - 1900
+    double WTBS_072 1901 - 1910
+    double WTBS_073 1911 - 1920
+    double WTBS_074 1921 - 1930
+    double WTBS_075 1931 - 1940
+    double WTBS_076 1941 - 1950
+    double WTBS_077 1951 - 1960
+    double WTBS_078 1961 - 1970
+    double WTBS_079 1971 - 1980
+    double WTBS_080 1981 - 1990
+    double WTBS_081 1991 - 2000
+    double WTBS_082 2001 - 2010
+    double WTBS_083 2011 - 2020
+    double WTBS_084 2021 - 2030
+    double WTBS_085 2031 - 2040
+    double WTBS_086 2041 - 2050
+    double WTBS_087 2051 - 2060
+    double WTBS_088 2061 - 2070
+    double WTBS_089 2071 - 2080
+    double WTBS_090 2081 - 2090
+    double WTBS_091 2091 - 2100
+    double WTBS_092 2101 - 2110
+    double WTBS_093 2111 - 2120
+    double WTBS_094 2121 - 2130
+    double WTBS_095 2131 - 2140
+    double WTBS_096 2141 - 2150
+    double WTBS_097 2151 - 2160
+    double WTBS_098 2161 - 2170
+    double WTBS_099 2171 - 2180
+    double WTBS_100 2181 - 2190
+    double WTBS_101 2191 - 2200
+    double WTBS_102 2201 - 2210
+    double WTBS_103 2211 - 2220
+    double WTBS_104 2221 - 2230
+    double WTBS_105 2231 - 2240
+    double WTBS_106 2241 - 2250
+    double WTBS_107 2251 - 2260
+    double WTBS_108 2261 - 2270
+    double WTBS_109 2271 - 2280
+    double WTBS_110 2281 - 2290
+    double WTBS_111 2291 - 2300
+    double WTBS_112 2301 - 2310
+    double WTBS_113 2311 - 2320
+    double WTBS_114 2321 - 2330
+    double WTBS_115 2331 - 2340
+    double WTBS_116 2341 - 2350
+    double WTBS_117 2351 - 2360
+    double WTBS_118 2361 - 2370
+    double WTBS_119 2371 - 2380
+    double WTBS_120 2381 - 2390
+    double WTBS_121 2391 - 2400
+    double WTBS_122 2401 - 2410
+    double WTBS_123 2411 - 2420
+    double WTBS_124 2421 - 2430
+    double WTBS_125 2431 - 2440
+    double WTBS_126 2441 - 2450
+    double WTBS_127 2451 - 2460
+    double WTBS_128 2461 - 2470
+    double WTBS_129 2471 - 2480
+    double WTBS_130 2481 - 2490
+    double WTBS_131 2491 - 2500
+    double WTBS_132 2501 - 2510
+    double WTBS_133 2511 - 2520
+    double WTBS_134 2521 - 2530
+    double WTBS_135 2531 - 2540
+    double WTBS_136 2541 - 2550
+    double WTBS_137 2551 - 2560
+    double WTBS_138 2561 - 2570
+    double WTBS_139 2571 - 2580
+    double WTBS_140 2581 - 2590
+    double WTBS_141 2591 - 2600
+    double WTBS_142 2601 - 2610
+    double WTBS_143 2611 - 2620
+    double WTBS_144 2621 - 2630
+    double WTBS_145 2631 - 2640
+    double WTBS_146 2641 - 2650
+    double WTBS_147 2651 - 2660
+    double WTBS_148 2661 - 2670
+    double WTBS_149 2671 - 2680
+    double WTBS_150 2681 - 2690
+    double WTBS_151 2691 - 2700
+    double WTBS_152 2701 - 2710
+    double WTBS_153 2711 - 2720
+    double WTBS_154 2721 - 2730
+    double WTBS_155 2731 - 2740
+    double WTBS_156 2741 - 2750
+    double WTBS_157 2751 - 2760
+    double WTBS_158 2761 - 2770
+    double WTBS_159 2771 - 2780
+    double WTBS_160 2781 - 2790
+    double WTBS_161 2791 - 2800
+    double WTBS_162 2801 - 2810
+    double WTBS_163 2811 - 2820
+    double WTBS_164 2821 - 2830
+    double WTBS_165 2831 - 2840
+    double WTBS_166 2841 - 2850
+    double WTBS_167 2851 - 2860
+    double WTBS_168 2861 - 2870
+    double WTBS_169 2871 - 2880
+    double WTBS_170 2881 - 2890
+    double WTBS_171 2891 - 2900
+    double WTBS_172 2901 - 2910
+    double WTBS_173 2911 - 2920
+    double WTBS_174 2921 - 2930
+    double WTBS_175 2931 - 2940
+    double WTBS_176 2941 - 2950
+    double WTBS_177 2951 - 2960
+    double WTBS_178 2961 - 2970
+    double WTBS_179 2971 - 2980
+    double WTBS_180 2981 - 2990
+    double WTBS_181 2991 - 3000
+    double WTBS_182 3001 - 3010
+    double WTBS_183 3011 - 3020
+    double WTBS_184 3021 - 3030
+    double WTBS_185 3031 - 3040
+    double WTBS_186 3041 - 3050
+    double WTBS_187 3051 - 3060
+    double WTBS_188 3061 - 3070
+    double WTBS_189 3071 - 3080
+    double WTBS_190 3081 - 3090
+    double WTBS_191 3091 - 3100
+    double WTBS_192 3101 - 3110
+    double WTBS_193 3111 - 3120
+    double WTBS_194 3121 - 3130
+    double WTBS_195 3131 - 3140
+    double WTBS_196 3141 - 3150
+    double WTBS_197 3151 - 3160
+    double WTBS_198 3161 - 3170
+    double WTBS_199 3171 - 3180
+    double WTBS_200 3181 - 3190
+    double WTBS_201 3191 - 3200
+    double WTBS_202 3201 - 3210
+    double WTBS_203 3211 - 3220
+    double WTBS_204 3221 - 3230
+    double WTBS_205 3231 - 3240
+    double WTBS_206 3241 - 3250
+    double WTBS_207 3251 - 3260
+    double WTBS_208 3261 - 3270
+    double WTBS_209 3271 - 3280
+    double WTBS_210 3281 - 3290
+    double WTBS_211 3291 - 3300
+    double WTBS_212 3301 - 3310
+    double WTBS_213 3311 - 3320
+    double WTBS_214 3321 - 3330
+    double WTBS_215 3331 - 3340
+    double WTBS_216 3341 - 3350
+    double WTBS_217 3351 - 3360
+    double WTBS_218 3361 - 3370
+    double WTBS_219 3371 - 3380
+    double WTBS_220 3381 - 3390
+    double WTBS_221 3391 - 3400
+    double WTBS_222 3401 - 3410
+    double WTBS_223 3411 - 3420
+    double WTBS_224 3421 - 3430
+    double WTBS_225 3431 - 3440
+    double WTBS_226 3441 - 3450
+    double WTBS_227 3451 - 3460
+    double WTBS_228 3461 - 3470
+    double WTBS_229 3471 - 3480
+    double WTBS_230 3481 - 3490
+    double WTBS_231 3491 - 3500
+    double WTBS_232 3501 - 3510
+    double WTBS_233 3511 - 3520
+    double WTBS_234 3521 - 3530
+    double WTBS_235 3531 - 3540
+    double WTBS_236 3541 - 3550
+    double WTBS_237 3551 - 3560
+    double WTBS_238 3561 - 3570
+    double WTBS_239 3571 - 3580
+    double WTBS_240 3581 - 3590
+    double WTBS_241 3591 - 3600
+    double WTBS_242 3601 - 3610
+    double WTBS_243 3611 - 3620
+    double WTBS_244 3621 - 3630
+    double WTBS_245 3631 - 3640
+    double WTBS_246 3641 - 3650
+    double WTBS_247 3651 - 3660
+    double WTBS_248 3661 - 3670
+    double WTBS_249 3671 - 3680
+    double WTBS_250 3681 - 3690
+    double WTBS_251 3691 - 3700
+    double WTBS_252 3701 - 3710
+    double WTBS_253 3711 - 3720
+    double WTBS_254 3721 - 3730
+    double WTBS_255 3731 - 3740
+    double WTBS_256 3741 - 3750
+    double WTBS_257 3751 - 3760
+    double WTBS_258 3761 - 3770
+    double WTBS_259 3771 - 3780
+    double WTBS_260 3781 - 3790
+    double WTBS_261 3791 - 3800
+    double WTBS_262 3801 - 3810
+    double WTBS_263 3811 - 3820
+    double WTBS_264 3821 - 3830
+    double WTBS_265 3831 - 3840
+    double WTBS_266 3841 - 3850
+    double WTBS_267 3851 - 3860
+    double WTBS_268 3861 - 3870
+    double WTBS_269 3871 - 3880
+    double WTBS_270 3881 - 3890
+    double WTBS_271 3891 - 3900
+    double WTBS_272 3901 - 3910
+    double WTBS_273 3911 - 3920
+    double WTBS_274 3921 - 3930
+    double WTBS_275 3931 - 3940
+    double WTBS_276 3941 - 3950
+    double WTBS_277 3951 - 3960
+    double WTBS_278 3961 - 3970
+    double WTBS_279 3971 - 3980
+    double WTBS_280 3981 - 3990
+    double WTBS_281 3991 - 4000
+    double WTBS_282 4001 - 4010
+    double WTBS_283 4011 - 4020
+    double WTBS_284 4021 - 4030
+    double WTBS_285 4031 - 4040
+    double WTBS_286 4041 - 4050
+    double WTBS_287 4051 - 4060
+    double WTBS_288 4061 - 4070
+    double WTBS_289 4071 - 4080
+    double WTBS_290 4081 - 4090
+    double WTBS_291 4091 - 4100
+    double WTBS_292 4101 - 4110
+    double WTBS_293 4111 - 4120
+    double WTBS_294 4121 - 4130
+    double WTBS_295 4131 - 4140
+    double WTBS_296 4141 - 4150
+    double WTBS_297 4151 - 4160
+    double WTBS_298 4161 - 4170
+    double WTBS_299 4171 - 4180
+    double WTBS_300 4181 - 4190
+    double WTBS_301 4191 - 4200
+    double WTBS_302 4201 - 4210
+    double WTBS_303 4211 - 4220
+    double WTBS_304 4221 - 4230
+    double WTBS_305 4231 - 4240
+    double WTBS_306 4241 - 4250
+    double WTBS_307 4251 - 4260
+    double WTBS_308 4261 - 4270
+    double WTBS_309 4271 - 4280
+    double WTBS_310 4281 - 4290
+    double WTBS_311 4291 - 4300
+    double WTBS_312 4301 - 4310
+    double WTBS_313 4311 - 4320
+    double WTBS_314 4321 - 4330
+    double WTBS_315 4331 - 4340
+    double WTBS_316 4341 - 4350
+    double WTBS_317 4351 - 4360
+    double WTBS_318 4361 - 4370
+    double WTBS_319 4371 - 4380
+    double WTBS_320 4381 - 4390
+    double WTBS_321 4391 - 4400
+    double WTBS_322 4401 - 4410
+    double WTBS_323 4411 - 4420
+    double WTBS_324 4421 - 4430
+    double WTBS_325 4431 - 4440
+    double WTBS_326 4441 - 4450
+    double WTBS_327 4451 - 4460
+    double WTBS_328 4461 - 4470
+    double WTBS_329 4471 - 4480
+    double WTBS_330 4481 - 4490
+    double WTBS_331 4491 - 4500
+    double WTBS_332 4501 - 4510
+    double WTBS_333 4511 - 4520
+    double WTBS_334 4521 - 4530
+    double WTBS_335 4531 - 4540
+    double WTBS_336 4541 - 4550
+    double WTBS_337 4551 - 4560
+    double WTBS_338 4561 - 4570
+    double WTBS_339 4571 - 4580
+    double WTBS_340 4581 - 4590
+    double WTBS_341 4591 - 4600
+    double WTBS_342 4601 - 4610
+    double WTBS_343 4611 - 4620
+    double WTBS_344 4621 - 4630
+    double WTBS_345 4631 - 4640
+    double WTBS_346 4641 - 4650
+    double WTBS_347 4651 - 4660
+    double WTBS_348 4661 - 4670
+    double WTBS_349 4671 - 4680
+    double WTBS_350 4681 - 4690
+    double WTBS_351 4691 - 4700
+    double WTBS_352 4701 - 4710
+    double WTBS_353 4711 - 4720
+    double WTBS_354 4721 - 4730
+    double WTBS_355 4731 - 4740
+    double WTBS_356 4741 - 4750
+    double WTBS_357 4751 - 4760
+    double WTBS_358 4761 - 4770
+    double WTBS_359 4771 - 4780
+    double WTBS_360 4781 - 4790
+    double WTBS_361 4791 - 4800
+    double WTBS_362 4801 - 4810
+    double WTBS_363 4811 - 4820
+    double WTBS_364 4821 - 4830
+    double WTBS_365 4831 - 4840
+    double WTBS_366 4841 - 4850
+    double WTBS_367 4851 - 4860
+    double WTBS_368 4861 - 4870
+    double WTBS_369 4871 - 4880
+    double WTBS_370 4881 - 4890
+    double WTBS_371 4891 - 4900
+    double WTBS_372 4901 - 4910
+    double WTBS_373 4911 - 4920
+    double WTBS_374 4921 - 4930
+    double WTBS_375 4931 - 4940
+    double WTBS_376 4941 - 4950
+    double WTBS_377 4951 - 4960
+    double WTBS_378 4961 - 4970
+    double WTBS_379 4971 - 4980
+    double WTBS_380 4981 - 4990
+    double WTBS_381 4991 - 5000
+    double WTBS_382 5001 - 5010
+    double WTBS_383 5011 - 5020
+    double WTBS_384 5021 - 5030
+    double WTBS_385 5031 - 5040
+    double WTBS_386 5041 - 5050
+    double WTBS_387 5051 - 5060
+    double WTBS_388 5061 - 5070
+    double WTBS_389 5071 - 5080
+    double WTBS_390 5081 - 5090
+    double WTBS_391 5091 - 5100
+    double WTBS_392 5101 - 5110
+    double WTBS_393 5111 - 5120
+    double WTBS_394 5121 - 5130
+    double WTBS_395 5131 - 5140
+    double WTBS_396 5141 - 5150
+    double WTBS_397 5151 - 5160
+    double WTBS_398 5161 - 5170
+    double WTBS_399 5171 - 5180
+    double WTBS_400 5181 - 5190
+    double WTBS_401 5191 - 5200
+    double WTBS_402 5201 - 5210
+    double WTBS_403 5211 - 5220
+    double WTBS_404 5221 - 5230
+    double WTBS_405 5231 - 5240
+    double WTBS_406 5241 - 5250
+    double WTBS_407 5251 - 5260
+    double WTBS_408 5261 - 5270
+    double WTBS_409 5271 - 5280
+    double WTBS_410 5281 - 5290
+    double WTBS_411 5291 - 5300
+    double WTBS_412 5301 - 5310
+    double WTBS_413 5311 - 5320
+    double WTBS_414 5321 - 5330
+    double WTBS_415 5331 - 5340
+    double WTBS_416 5341 - 5350
+    double WTBS_417 5351 - 5360
+    double WTBS_418 5361 - 5370
+    double WTBS_419 5371 - 5380
+    double WTBS_420 5381 - 5390
+    double WTBS_421 5391 - 5400
+    double WTBS_422 5401 - 5410
+    double WTBS_423 5411 - 5420
+    double WTBS_424 5421 - 5430
+    double WTBS_425 5431 - 5440
+    double WTBS_426 5441 - 5450
+    double WTBS_427 5451 - 5460
+    double WTBS_428 5461 - 5470
+    double WTBS_429 5471 - 5480
+    double WTBS_430 5481 - 5490
+    double WTBS_431 5491 - 5500
+    double WTBS_432 5501 - 5510
+    double WTBS_433 5511 - 5520
+    double WTBS_434 5521 - 5530
+    double WTBS_435 5531 - 5540
+    double WTBS_436 5541 - 5550
+    double WTBS_437 5551 - 5560
+    double WTBS_438 5561 - 5570
+    double WTBS_439 5571 - 5580
+    double WTBS_440 5581 - 5590
+    double WTBS_441 5591 - 5600
+    double WTBS_442 5601 - 5610
+    double WTBS_443 5611 - 5620
+    double WTBS_444 5621 - 5630
+    double WTBS_445 5631 - 5640
+    double WTBS_446 5641 - 5650
+    double WTBS_447 5651 - 5660
+    double WTBS_448 5661 - 5670
+    double WTBS_449 5671 - 5680
+    double WTBS_450 5681 - 5690
+    double WTBS_451 5691 - 5700
+    double WTBS_452 5701 - 5710
+    double WTBS_453 5711 - 5720
+    double WTBS_454 5721 - 5730
+    double WTBS_455 5731 - 5740
+    double WTBS_456 5741 - 5750
+    double WTBS_457 5751 - 5760
+    double WTBS_458 5761 - 5770
+    double WTBS_459 5771 - 5780
+    double WTBS_460 5781 - 5790
+    double WTBS_461 5791 - 5800
+    double WTBS_462 5801 - 5810
+    double WTBS_463 5811 - 5820
+    double WTBS_464 5821 - 5830
+    double WTBS_465 5831 - 5840
+    double WTBS_466 5841 - 5850
+    double WTBS_467 5851 - 5860
+    double WTBS_468 5861 - 5870
+    double WTBS_469 5871 - 5880
+    double WTBS_470 5881 - 5890
+    double WTBS_471 5891 - 5900
+    double WTBS_472 5901 - 5910
+    double WTBS_473 5911 - 5920
+    double WTBS_474 5921 - 5930
+    double WTBS_475 5931 - 5940
+    double WTBS_476 5941 - 5950
+    double WTBS_477 5951 - 5960
+    double WTBS_478 5961 - 5970
+    double WTBS_479 5971 - 5980
+    double WTBS_480 5981 - 5990
+    double WTBS_481 5991 - 6000
+    double WTBS_482 6001 - 6010
+    double WTBS_483 6011 - 6020
+    double WTBS_484 6021 - 6030
+    double WTBS_485 6031 - 6040
+    double WTBS_486 6041 - 6050
+    double WTBS_487 6051 - 6060
+    double WTBS_488 6061 - 6070
+    double WTBS_489 6071 - 6080
+    double WTBS_490 6081 - 6090
+    double WTBS_491 6091 - 6100
+    double WTBS_492 6101 - 6110
+    double WTBS_493 6111 - 6120
+    double WTBS_494 6121 - 6130
+    double WTBS_495 6131 - 6140
+    double WTBS_496 6141 - 6150
+    double WTBS_497 6151 - 6160
+    double WTBS_498 6161 - 6170
+    double WTBS_499 6171 - 6180
+    double WTBS_500 6181 - 6190
+}

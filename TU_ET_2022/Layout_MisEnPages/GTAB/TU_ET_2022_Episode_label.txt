@@ -1,0 +1,28 @@
+﻿FieldName	FormatEN	FormatFR	LabelEN	LabelFR
+PUMFID	M00087FE	M00087FF	PUMF Record identification	Numéro d’identification de l’enregistrement du FMGD
+INSTANCE	M00077FE	M00077FF	Sequential episode number	Numéro séquentiel de chaque épisode
+WGHT_EPI	M00834FE	M00834FF	Episode weight	Pondération de la période
+ACTIVITY	D00083FE	D00083FF	Main activity	Activité principale
+DUR_03	A00708FE	A00708FF	Length of the simultaneous activity	Durée de l'activité simultanée
+DURATION	M00840FE	M00840FF	Duration of an episode (in minutes)	Durée d'un épisode (en minutes)
+ENDMIN	M00839FE	M00839FF	End time of the episode in minutes	Heure de la fin de l'épisode en minutes
+ENDTIME	M00839FE	M00839FF	End time of the episode	Heure de la fin de l'épisode
+INSTANCE	M00077FE	M00077FF	Sequential episode number	Numéro séquentiel de chaque épisode
+LOCATION	D00085FE	D00085FF	Location of the episode	Localisation de la période
+STARTIME	M00839FE	M00839FF	Start time of the episode	Heure du début de l'épisode
+STARTMIN	M00839FE	M00839FF	Start time of the episode in minutes	Temps du début de l'épisode en minutes
+TUI_01	D00140FE	D00140FF	Main activity - Detailed level codes	Activité principale - codes détaillés
+TUI_03	D00141FE	D00141FF	Simultaneous activity	Activité simultanée
+TUI_06A	YESN01FE	YESN01FF	Social contact - Alone	Contact social - Seul(e)
+TUI_06B	YESN01FE	YESN01FF	Social contact - With spouse/partner	Contact social - Avec conjoint(e) ou partenaire
+TUI_06C	YESN01FE	YESN01FF	Social contact - With household children, less than 15 years old	Contact social - Avec enfants du ménage ayant moins de 15 ans
+TUI_06D	YESN01FE	YESN01FF	Social contact - With household child(ren), 15 years or older	Contact social - Avec enfants du ménage, 15 ans et plus
+TUI_06E	YESN01FE	YESN01FF	Social contact - With parent(s) or parent(s)-in-law	Contact social - Avec le(s) parent(s) ou beau(x)-parent(s)
+TUI_06F	YESN01FE	YESN01FF	Social contact - With other household adult(s)	Contact social- Avec le(s) autre(s) membre(s) du ménage adulte(s)
+TUI_06G	YESN01FE	YESN01FF	Social contact - With other family member(s) from other households	Contact social- Avec autre(s) membre(s) de la famille-autre ménage
+TUI_06H	YESN01FE	YESN01FF	Social contact - With friends	Contact social - Avec ami(e/s)
+TUI_06I	YESN01FE	YESN01FF	Social contact - With colleague(s), classmate(s)	Contact social - Avec les collègues, ami(e/s) d’école
+TUI_06J	YESN01FE	YESN01FF	Social contact - With other people	Contact social - Avec autre personne(s)
+TUI_07	YESN01FE	YESN01FF	Respondent use of technology	Utilisation des technologies du répondant
+TUI_15	A00709FE	A00709FF	Subjective well-being scale	Échelle de bien-être subjectif
+WEPI_001	M00835FE	M00835FF	Bootstrap weight # 1 at the episode level	Pondération Bootstrap no 1 pour la pondération au niveau des épisodes
