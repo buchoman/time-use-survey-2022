@@ -1,3 +1,0 @@
-# System packages for Streamlit Cloud
-# Note: Streamlit Cloud may not support all system packages
-# If pyreadstat fails, we may need an alternative approach
