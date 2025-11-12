@@ -795,13 +795,13 @@ def main():
             activity_desc = ACTIVITY_DESCRIPTIONS.get(var, "Activity description not available")
             
             results.append({
-                'Activity_Code': var,
-                'Activity_Description': activity_desc,
-                'Activity_Category': category,
-                'Mean_Minutes_Per_Day': mean_est,
+                'Activity Code': var,
+                'Activity Description': activity_desc,
+                'Activity Category': category,
+                'Mean Minutes Per Day': mean_est,
                 'Variance': variance,
-                'Standard_Error': std_error,
-                'Coefficient_of_Variation': (std_error / mean_est * 100) if not np.isnan(mean_est) and mean_est != 0 else np.nan
+                'Standard Error': std_error,
+                'Coefficient of Variation': (std_error / mean_est * 100) if not np.isnan(mean_est) and mean_est != 0 else np.nan
             })
             
             # Update both progress bars
@@ -836,11 +836,11 @@ def main():
             std_error = np.sqrt(variance) if not np.isnan(variance) else np.nan
             
             category_results_list.append({
-                'Activity_Category': category,
-                'Mean_Minutes_Per_Day': mean_est,
+                'Activity Category': category,
+                'Mean Minutes Per Day': mean_est,
                 'Variance': variance,
-                'Standard_Error': std_error,
-                'Coefficient_of_Variation': (std_error / mean_est * 100) if not np.isnan(mean_est) and mean_est != 0 else np.nan
+                'Standard Error': std_error,
+                'Coefficient of Variation': (std_error / mean_est * 100) if not np.isnan(mean_est) and mean_est != 0 else np.nan
             })
             
             # Update overall progress bar
@@ -858,12 +858,12 @@ def main():
         results_df = st.session_state.results.copy()
         
         # Round numeric columns
-        numeric_cols = ['Mean_Minutes_Per_Day', 'Variance', 'Standard_Error', 'Coefficient_of_Variation']
+        numeric_cols = ['Mean Minutes Per Day', 'Variance', 'Standard Error', 'Coefficient of Variation']
         for col in numeric_cols:
             if col in results_df.columns:
                 results_df[col] = results_df[col].round(2)
         
-        # Add CSS for subtle table shading
+        # Add CSS for subtle table shading and column alignment
         st.markdown("""
         <style>
         /* Subtle shading for dataframes */
@@ -877,6 +877,36 @@ def main():
             background-color: #f0f1f2 !important;
         }
         </style>
+        <script>
+        // Right-justify specific column headers and cells
+        function alignNumericColumns() {
+            const tables = document.querySelectorAll('div[data-testid="stDataFrame"] table');
+            const numericHeaders = ['Mean Minutes Per Day', 'Variance', 'Standard Error', 'Coefficient of Variation'];
+            
+            tables.forEach(table => {
+                const headers = Array.from(table.querySelectorAll('thead th'));
+                headers.forEach((th, colIndex) => {
+                    const headerText = th.textContent.trim();
+                    if (numericHeaders.includes(headerText)) {
+                        th.style.textAlign = 'right';
+                        // Also align all cells in this column
+                        const rows = table.querySelectorAll('tbody tr');
+                        rows.forEach(row => {
+                            const cell = row.querySelectorAll('td')[colIndex];
+                            if (cell) {
+                                cell.style.textAlign = 'right';
+                            }
+                        });
+                    }
+                });
+            });
+        }
+        
+        // Run immediately and after a delay to catch dynamically loaded tables
+        alignNumericColumns();
+        setTimeout(alignNumericColumns, 200);
+        setTimeout(alignNumericColumns, 500);
+        </script>
         """, unsafe_allow_html=True)
         
         # Display by broad activity (category) first
@@ -894,7 +924,7 @@ def main():
         # Display by activity code
         st.subheader("By Activity Code")
         # Reorder columns to show description first
-        display_cols = ['Activity_Code', 'Activity_Description', 'Activity_Category'] + [c for c in results_df.columns if c not in ['Activity_Code', 'Activity_Description', 'Activity_Category']]
+        display_cols = ['Activity Code', 'Activity Description', 'Activity Category'] + [c for c in results_df.columns if c not in ['Activity Code', 'Activity Description', 'Activity Category']]
         display_df = results_df[[c for c in display_cols if c in results_df.columns]]
         st.dataframe(display_df, use_container_width=True, height=400)
         
@@ -1015,15 +1045,15 @@ def main():
                     category_results = st.session_state.category_results.copy()
                     for _, row in category_results.iterrows():
                         all_data.append([
-                            row['Activity_Category'],
-                            round(row['Mean_Minutes_Per_Day'], 2),
+                            row['Activity Category'],
+                            round(row['Mean Minutes Per Day'], 2),
                             round(row['Variance'], 2),
-                            round(row['Standard_Error'], 2),
-                            round(row['Coefficient_of_Variation'], 2) if not pd.isna(row['Coefficient_of_Variation']) else ""
+                            round(row['Standard Error'], 2),
+                            round(row['Coefficient of Variation'], 2) if not pd.isna(row['Coefficient of Variation']) else ""
                         ])
                     
                     # Add total row
-                    total_minutes = category_results['Mean_Minutes_Per_Day'].sum()
+                    total_minutes = category_results['Mean Minutes Per Day'].sum()
                     all_data.append(["TOTAL", round(total_minutes, 2), "", "", ""])
                     all_data.append(["Verification (should equal 1440):", round(total_minutes, 2)])
                 
@@ -1035,23 +1065,23 @@ def main():
                 all_data.append(["Activity Code", "Activity Description", "Activity Category", 
                                "Mean Minutes Per Day", "Variance", "Standard Error", "Coefficient of Variation (%)"])
                 
-                display_cols = ['Activity_Code', 'Activity_Description', 'Activity_Category', 
-                              'Mean_Minutes_Per_Day', 'Variance', 'Standard_Error', 'Coefficient_of_Variation']
+                display_cols = ['Activity Code', 'Activity Description', 'Activity Category', 
+                              'Mean Minutes Per Day', 'Variance', 'Standard Error', 'Coefficient of Variation']
                 results_export = results_df[[c for c in display_cols if c in results_df.columns]].copy()
                 
                 for _, row in results_export.iterrows():
                     all_data.append([
-                        row['Activity_Code'],
-                        row['Activity_Description'],
-                        row['Activity_Category'],
-                        round(row['Mean_Minutes_Per_Day'], 2),
+                        row['Activity Code'],
+                        row['Activity Description'],
+                        row['Activity Category'],
+                        round(row['Mean Minutes Per Day'], 2),
                         round(row['Variance'], 2),
-                        round(row['Standard_Error'], 2),
-                        round(row['Coefficient_of_Variation'], 2) if not pd.isna(row['Coefficient_of_Variation']) else ""
+                        round(row['Standard Error'], 2),
+                        round(row['Coefficient of Variation'], 2) if not pd.isna(row['Coefficient of Variation']) else ""
                     ])
                 
                 # Add total row
-                total_minutes_detail = results_export['Mean_Minutes_Per_Day'].sum()
+                total_minutes_detail = results_export['Mean Minutes Per Day'].sum()
                 all_data.append(["TOTAL", "", "", round(total_minutes_detail, 2), "", "", ""])
                 all_data.append(["Verification (should equal 1440):", "", "", round(total_minutes_detail, 2), "", "", ""])
                 
