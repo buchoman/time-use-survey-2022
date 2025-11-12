@@ -755,87 +755,103 @@ def main():
         
         st.info(f"Using {len(bootstrap_cols)} bootstrap weights for variance estimation.")
         
-        with st.spinner("Calculating estimates and bootstrap variances (this may take a few minutes)..."):
-            results = []
+        # Overall progress tracking
+        overall_progress_bar = st.progress(0)
+        overall_status_text = st.empty()
+        
+        # Phase 1: Calculate individual activity estimates (70% of progress)
+        overall_status_text.text("Phase 1 of 2: Calculating individual activity estimates...")
+        results = []
+        
+        # Get DUR variables that exist in the data
+        available_dur_vars = [var for var in ALL_DUR_VARS if var in filtered_df.columns]
+        
+        if len(available_dur_vars) == 0:
+            st.error("No DUR variables found in the dataset.")
+            overall_progress_bar.empty()
+            overall_status_text.empty()
+            return
+        
+        # Calculate for each DUR variable
+        progress_bar = st.progress(0)
+        status_text = st.empty()
+        total_vars = len(available_dur_vars)
+        
+        for idx, var in enumerate(available_dur_vars):
+            status_text.text(f"Processing {var} ({idx + 1}/{total_vars})...")
             
-            # Get DUR variables that exist in the data
-            available_dur_vars = [var for var in ALL_DUR_VARS if var in filtered_df.columns]
+            mean_est = calculate_weighted_mean(filtered_df, var)
+            variance = calculate_bootstrap_variance(filtered_df, var, bootstrap_cols=bootstrap_cols)
+            std_error = np.sqrt(variance) if not np.isnan(variance) else np.nan
             
-            if len(available_dur_vars) == 0:
-                st.error("No DUR variables found in the dataset.")
-                return
+            # Find category
+            category = "Other"
+            for cat, vars_list in ACTIVITY_CATEGORIES.items():
+                if var in vars_list:
+                    category = cat
+                    break
             
-            # Calculate for each DUR variable
-            progress_bar = st.progress(0)
-            status_text = st.empty()
-            total_vars = len(available_dur_vars)
+            # Get activity description
+            activity_desc = ACTIVITY_DESCRIPTIONS.get(var, "Activity description not available")
             
-            for idx, var in enumerate(available_dur_vars):
-                status_text.text(f"Processing {var} ({idx + 1}/{total_vars})...")
-                
-                mean_est = calculate_weighted_mean(filtered_df, var)
-                variance = calculate_bootstrap_variance(filtered_df, var, bootstrap_cols=bootstrap_cols)
-                std_error = np.sqrt(variance) if not np.isnan(variance) else np.nan
-                
-                # Find category
-                category = "Other"
-                for cat, vars_list in ACTIVITY_CATEGORIES.items():
-                    if var in vars_list:
-                        category = cat
-                        break
-                
-                # Get activity description
-                activity_desc = ACTIVITY_DESCRIPTIONS.get(var, "Activity description not available")
-                
-                results.append({
-                    'Activity_Code': var,
-                    'Activity_Description': activity_desc,
-                    'Activity_Category': category,
-                    'Mean_Minutes_Per_Day': mean_est,
-                    'Variance': variance,
-                    'Standard_Error': std_error,
-                    'Coefficient_of_Variation': (std_error / mean_est * 100) if not np.isnan(mean_est) and mean_est != 0 else np.nan
-                })
-                
-                progress_bar.progress((idx + 1) / total_vars)
+            results.append({
+                'Activity_Code': var,
+                'Activity_Description': activity_desc,
+                'Activity_Category': category,
+                'Mean_Minutes_Per_Day': mean_est,
+                'Variance': variance,
+                'Standard_Error': std_error,
+                'Coefficient_of_Variation': (std_error / mean_est * 100) if not np.isnan(mean_est) and mean_est != 0 else np.nan
+            })
             
-            st.session_state.results = pd.DataFrame(results)
-            progress_bar.empty()
-            status_text.empty()
+            # Update both progress bars
+            progress_bar.progress((idx + 1) / total_vars)
+            overall_progress_bar.progress(0.7 * (idx + 1) / total_vars)
+        
+        st.session_state.results = pd.DataFrame(results)
+        progress_bar.empty()
+        status_text.empty()
+        
+        # Phase 2: Calculate category results (30% of progress)
+        overall_status_text.text("Phase 2 of 2: Calculating aggregated category estimates...")
+        category_results_list = []
+        bootstrap_cols = get_bootstrap_weights(filtered_df)
+        total_categories = len(ACTIVITY_CATEGORIES)
+        
+        for cat_idx, (category, vars_list) in enumerate(ACTIVITY_CATEGORIES.items()):
+            # Get variables in this category that exist in the data
+            cat_vars = [v for v in vars_list if v in filtered_df.columns]
             
-            # Calculate category results immediately after individual results
-            with st.spinner("Calculating aggregated category estimates..."):
-                category_results_list = []
-                bootstrap_cols = get_bootstrap_weights(filtered_df)
-                
-                for category, vars_list in ACTIVITY_CATEGORIES.items():
-                    # Get variables in this category that exist in the data
-                    cat_vars = [v for v in vars_list if v in filtered_df.columns]
-                    
-                    if len(cat_vars) == 0:
-                        continue
-                    
-                    # Create a sum variable for this category
-                    filtered_df['_CAT_SUM'] = filtered_df[cat_vars].sum(axis=1)
-                    
-                    # Calculate weighted mean for the sum
-                    mean_est = calculate_weighted_mean(filtered_df, '_CAT_SUM')
-                    
-                    # Calculate bootstrap variance for the sum
-                    variance = calculate_bootstrap_variance(filtered_df, '_CAT_SUM', bootstrap_cols=bootstrap_cols)
-                    std_error = np.sqrt(variance) if not np.isnan(variance) else np.nan
-                    
-                    category_results_list.append({
-                        'Activity_Category': category,
-                        'Mean_Minutes_Per_Day': mean_est,
-                        'Variance': variance,
-                        'Standard_Error': std_error,
-                        'Coefficient_of_Variation': (std_error / mean_est * 100) if not np.isnan(mean_est) and mean_est != 0 else np.nan
-                    })
-                
-                st.session_state.category_results = pd.DataFrame(category_results_list)
+            if len(cat_vars) == 0:
+                continue
             
-            st.success("Calculations complete!")
+            # Create a sum variable for this category
+            filtered_df['_CAT_SUM'] = filtered_df[cat_vars].sum(axis=1)
+            
+            # Calculate weighted mean for the sum
+            mean_est = calculate_weighted_mean(filtered_df, '_CAT_SUM')
+            
+            # Calculate bootstrap variance for the sum
+            variance = calculate_bootstrap_variance(filtered_df, '_CAT_SUM', bootstrap_cols=bootstrap_cols)
+            std_error = np.sqrt(variance) if not np.isnan(variance) else np.nan
+            
+            category_results_list.append({
+                'Activity_Category': category,
+                'Mean_Minutes_Per_Day': mean_est,
+                'Variance': variance,
+                'Standard_Error': std_error,
+                'Coefficient_of_Variation': (std_error / mean_est * 100) if not np.isnan(mean_est) and mean_est != 0 else np.nan
+            })
+            
+            # Update overall progress bar
+            overall_progress_bar.progress(0.7 + 0.3 * (cat_idx + 1) / total_categories)
+        
+        st.session_state.category_results = pd.DataFrame(category_results_list)
+        
+        overall_progress_bar.progress(1.0)
+        overall_progress_bar.empty()
+        overall_status_text.empty()
+        st.success("Calculations complete!")
     
     # Display results
     if 'results' in st.session_state and st.session_state.results is not None:
@@ -847,16 +863,25 @@ def main():
             if col in results_df.columns:
                 results_df[col] = results_df[col].round(2)
         
-        # Display by activity code
-        st.subheader("By Activity Code")
-        # Reorder columns to show description first
-        display_cols = ['Activity_Code', 'Activity_Description', 'Activity_Category'] + [c for c in results_df.columns if c not in ['Activity_Code', 'Activity_Description', 'Activity_Category']]
-        display_df = results_df[[c for c in display_cols if c in results_df.columns]]
-        st.dataframe(display_df, use_container_width=True, height=400)
+        # Add CSS for subtle table shading
+        st.markdown("""
+        <style>
+        /* Subtle shading for dataframes */
+        div[data-testid="stDataFrame"] > div {
+            background-color: #f8f9fa !important;
+        }
+        div[data-testid="stDataFrame"] table {
+            background-color: #fafbfc !important;
+        }
+        div[data-testid="stDataFrame"] thead tr th {
+            background-color: #f0f1f2 !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
         
-        # Display by category
+        # Display by broad activity (category) first
         if 'category_results' in st.session_state and st.session_state.category_results is not None:
-            st.subheader("By Activity Category")
+            st.subheader("By Broad Activity")
             category_results = st.session_state.category_results.copy()
             
             # Round
@@ -865,6 +890,13 @@ def main():
                     category_results[col] = category_results[col].round(2)
             
             st.dataframe(category_results, use_container_width=True, height=400)
+        
+        # Display by activity code
+        st.subheader("By Activity Code")
+        # Reorder columns to show description first
+        display_cols = ['Activity_Code', 'Activity_Description', 'Activity_Category'] + [c for c in results_df.columns if c not in ['Activity_Code', 'Activity_Description', 'Activity_Category']]
+        display_df = results_df[[c for c in display_cols if c in results_df.columns]]
+        st.dataframe(display_df, use_container_width=True, height=400)
         
         # Export options - Single download button
         st.subheader("📥 Export Results")
