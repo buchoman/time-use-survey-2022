@@ -561,63 +561,69 @@ def main():
         st.subheader("Geography")
         provinces = get_unique_values(df, 'PRV')
         if provinces:
-            selected_province = st.selectbox(
+            selected_provinces = st.multiselect(
                 "Province of Residence",
-                options=[None] + provinces,
-                format_func=lambda x: "All" if x is None else format_option_label('PRV', x)
+                options=provinces,
+                format_func=lambda x: format_option_label('PRV', x),
+                help="Select one or more provinces. Leave empty to include all."
             )
-            if selected_province is not None:
-                filters['PRV'] = selected_province
+            if len(selected_provinces) > 0:
+                filters['PRV'] = selected_provinces
         
         regions = get_unique_values(df, 'REGION')
         if regions:
-            selected_region = st.selectbox(
+            selected_regions = st.multiselect(
                 "Region of Residence",
-                options=[None] + regions,
-                format_func=lambda x: "All" if x is None else format_option_label('REGION', x)
+                options=regions,
+                format_func=lambda x: format_option_label('REGION', x),
+                help="Select one or more regions. Leave empty to include all."
             )
-            if selected_region is not None:
-                filters['REGION'] = selected_region
+            if len(selected_regions) > 0:
+                filters['REGION'] = selected_regions
         
         st.subheader("Demographics")
         genders = get_unique_values(df, 'GENDER2')
         if genders:
-            selected_gender = st.selectbox(
+            selected_genders = st.multiselect(
                 "Gender",
-                options=[None] + genders,
-                format_func=lambda x: "All" if x is None else format_option_label('GENDER2', x)
+                options=genders,
+                format_func=lambda x: format_option_label('GENDER2', x),
+                help="Select one or more gender categories. Leave empty to include all."
             )
-            if selected_gender is not None:
-                filters['GENDER2'] = selected_gender
+            if len(selected_genders) > 0:
+                filters['GENDER2'] = selected_genders
         
         age_groups = get_unique_values(df, 'AGEGR10')
         if age_groups:
-            selected_age = st.selectbox(
+            selected_ages = st.multiselect(
                 "Age group (10-year groups)",
-                options=[None] + age_groups,
-                format_func=lambda x: "All" if x is None else format_option_label('AGEGR10', x)
+                options=age_groups,
+                format_func=lambda x: format_option_label('AGEGR10', x),
+                help="Select one or more age groups. Leave empty to include all."
             )
-            if selected_age is not None:
-                filters['AGEGR10'] = selected_age
+            if len(selected_ages) > 0:
+                filters['AGEGR10'] = selected_ages
         
         marital_status = get_unique_values(df, 'MARSTAT')
         if marital_status:
-            selected_marital = st.selectbox(
+            selected_marital = st.multiselect(
                 "Marital status",
-                options=[None] + marital_status,
-                format_func=lambda x: "All" if x is None else format_option_label('MARSTAT', x)
+                options=marital_status,
+                format_func=lambda x: format_option_label('MARSTAT', x),
+                help="Select one or more marital statuses. Leave empty to include all."
             )
-            if selected_marital is not None:
+            if len(selected_marital) > 0:
                 filters['MARSTAT'] = selected_marital
         
         education = get_unique_values(df, 'ED_05')
         if education:
-            selected_edu = st.selectbox(
+            selected_edu = st.multiselect(
                 "Educational attainment",
-                options=[None] + education,
-                format_func=lambda x: "All" if x is None else format_option_label('ED_05', x)
+                options=education,
+                format_func=lambda x: format_option_label('ED_05', x),
+                help="Select one or more education levels. Leave empty to include all."
             )
-            if selected_edu is not None:
+            if len(selected_edu) > 0:
                 filters['ED_05'] = selected_edu
     
     # MIDDLE COLUMN: Employment Status, Income
@@ -633,33 +639,36 @@ def main():
             if var in df.columns:
                 values = get_unique_values(df, var)
                 if values:
-                    selected = st.selectbox(
+                    selected = st.multiselect(
                         label,
-                        options=[None] + values,
-                        format_func=lambda x, v=var: "All" if x is None else format_option_label(v, x)
+                        options=values,
+                        format_func=lambda x, v=var: format_option_label(v, x),
+                        help="Select one or more options. Leave empty to include all."
                     )
-                    if selected is not None:
+                    if len(selected) > 0:
                         filters[var] = selected
         
         st.subheader("Income")
         income = get_unique_values(df, 'INC_C')
         if income:
-            selected_inc = st.selectbox(
+            selected_inc = st.multiselect(
                 "Income (grouped)",
-                options=[None] + income,
-                format_func=lambda x: "All" if x is None else format_option_label('INC_C', x)
+                options=income,
+                format_func=lambda x: format_option_label('INC_C', x),
+                help="Select one or more income groups. Leave empty to include all."
             )
-            if selected_inc is not None:
+            if len(selected_inc) > 0:
                 filters['INC_C'] = selected_inc
         
         fam_income = get_unique_values(df, 'FAMINC_C')
         if fam_income:
-            selected_faminc = st.selectbox(
+            selected_faminc = st.multiselect(
                 "Family income (grouped)",
-                options=[None] + fam_income,
-                format_func=lambda x: "All" if x is None else format_option_label('FAMINC_C', x)
+                options=fam_income,
+                format_func=lambda x: format_option_label('FAMINC_C', x),
+                help="Select one or more family income groups. Leave empty to include all."
             )
-            if selected_faminc is not None:
+            if len(selected_faminc) > 0:
                 filters['FAMINC_C'] = selected_faminc
     
     # RIGHT COLUMN: Spousal/Partner Information, Children
@@ -675,23 +684,25 @@ def main():
             if var in df.columns:
                 values = get_unique_values(df, var)
                 if values:
-                    selected = st.selectbox(
+                    selected = st.multiselect(
                         label,
-                        options=[None] + values,
-                        format_func=lambda x, v=var: "All" if x is None else format_option_label(v, x)
+                        options=values,
+                        format_func=lambda x, v=var: format_option_label(v, x),
+                        help="Select one or more options. Leave empty to include all."
                     )
-                    if selected is not None:
+                    if len(selected) > 0:
                         filters[var] = selected
         
         st.subheader("Children")
         num_children = get_unique_values(df, 'CHH0017C')
         if num_children:
-            selected_children = st.selectbox(
+            selected_children = st.multiselect(
                 "Number of children (0-17 years)",
-                options=[None] + num_children,
-                format_func=lambda x: "All" if x is None else format_option_label('CHH0017C', x)
+                options=num_children,
+                format_func=lambda x: format_option_label('CHH0017C', x),
+                help="Select one or more categories (e.g., select 1.0, 2.0, 3.0 to include all groups with children). Leave empty to include all."
             )
-            if selected_children is not None:
+            if len(selected_children) > 0:
                 filters['CHH0017C'] = selected_children
         
         child_age_vars = {
@@ -704,12 +715,13 @@ def main():
             if var in df.columns:
                 values = get_unique_values(df, var)
                 if values:
-                    selected = st.selectbox(
+                    selected = st.multiselect(
                         label,
-                        options=[None] + values,
-                        format_func=lambda x, v=var: "All" if x is None else format_option_label(v, x)
+                        options=values,
+                        format_func=lambda x, v=var: format_option_label(v, x),
+                        help="Select one or more options. Leave empty to include all."
                     )
-                    if selected is not None:
+                    if len(selected) > 0:
                         filters[var] = selected
     
     # Apply Filters button below all filters
@@ -936,8 +948,19 @@ def main():
                     if var in all_filter_vars and all_filter_vars[var]:
                         selected_val = st.session_state.filters.get(var, None)
                         if selected_val is not None:
-                            selected_label = format_value(var, selected_val)
-                            selected_display = f"{selected_label} ({selected_val})"
+                            # Handle both single values and lists
+                            if isinstance(selected_val, list):
+                                if len(selected_val) > 0:
+                                    selected_labels = []
+                                    for val in selected_val:
+                                        lbl = format_value(var, val)
+                                        selected_labels.append(f"{lbl} ({val})")
+                                    selected_display = "; ".join(selected_labels)
+                                else:
+                                    selected_display = "All"
+                            else:
+                                selected_label = format_value(var, selected_val)
+                                selected_display = f"{selected_label} ({selected_val})"
                         else:
                             selected_display = "All"
                         
