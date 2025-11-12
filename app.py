@@ -724,32 +724,27 @@ def main():
                     if len(selected) > 0:
                         filters[var] = selected
     
-    # Apply Filters button below all filters
-    st.markdown("---")
-    st.markdown("Click the button below to apply your selected filters and view the filtered dataset.")
-    if st.button("Apply Filters", type="primary", use_container_width=False, key="apply_filters_btn"):
-        st.session_state.filters = filters
-        st.session_state.filtered_count = None  # Reset filtered count
-        st.rerun()
+    # Update session state with current filters for real-time updates
+    st.session_state.filters = filters
     
-    if 'filters' not in st.session_state:
-        st.session_state.filters = {}
+    # Calculate and display matching records count in real-time
+    filtered_df = filter_data(df, filters)
+    filtered_count = len(filtered_df)
+    
+    # Display matching records count box
+    if filtered_count == 0:
+        st.warning("**0 records** match your selected criteria. Please adjust your selections.")
+    else:
+        st.info(f"**{filtered_count:,} records** match your selected criteria.")
+    
+    # Store filtered count in session state
+    st.session_state.filtered_count = filtered_count
     
     # Main content area
     st.header("📈 Time Estimates")
     
-    # Apply filters
-    filtered_df = filter_data(df, st.session_state.filters)
-    
     if len(filtered_df) == 0:
-        st.warning("No records match the selected filters. Please adjust your selections.")
         return
-    
-    filtered_count = len(filtered_df)
-    st.info(f"**{filtered_count:,} records** match your selected criteria.")
-    
-    # Store filtered count in session state
-    st.session_state.filtered_count = filtered_count
     
     # Calculate estimates
     if st.button("Calculate Estimates", type="primary"):
