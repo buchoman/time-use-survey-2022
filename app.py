@@ -1060,14 +1060,41 @@ def main():
             ws['A1'].font = title_font
             ws.merge_cells(f'A1:{get_column_letter(max_col)}1')
             
-            # Format section headers
+            # Format section headers and highlight specific categories
+            yellow_fill = PatternFill(start_color="FFFF99", end_color="FFFF99", fill_type="solid")
+            in_category_section = False
+            category_start_row = None
+            category_header_row = None
+            
             for row_idx, row in enumerate(ws.iter_rows(min_row=1, max_row=max_row), 1):
                 cell_value = str(row[0].value) if row[0].value else ""
-                if any(keyword in cell_value for keyword in ["Source:", "Filter Criteria:", "Activity Category Breakdown", 
-                                                             "Individual Activity Code Breakdown", "TOTAL", "Verification"]):
+                
+                # Track when we're in the Activity Category Breakdown section
+                if "Activity Category Breakdown" in cell_value:
+                    in_category_section = True
+                    category_start_row = row_idx
+                elif "Individual Activity Code Breakdown" in cell_value:
+                    in_category_section = False
+                
+                # Check if this is the category header row (row after "Activity Category Breakdown")
+                if in_category_section and row_idx == category_start_row + 1:
+                    category_header_row = row_idx
+                
+                # Format section headers
+                is_header = any(keyword in cell_value for keyword in ["Source:", "Filter Criteria:", "Activity Category Breakdown", 
+                                                             "Individual Activity Code Breakdown", "TOTAL", "Verification"])
+                if is_header:
                     for cell in row:
                         cell.font = Font(bold=True, size=11)
                         cell.fill = PatternFill(start_color="D9E1F2", end_color="D9E1F2", fill_type="solid")
+                
+                # Highlight specific categories in Activity Category Breakdown section (skip header rows)
+                if in_category_section and row_idx > category_start_row + 1 and row_idx != category_header_row:
+                    first_cell_value = str(row[0].value) if row[0].value else ""
+                    # Don't highlight if it's a header row (TOTAL, Verification)
+                    if first_cell_value not in ["TOTAL", "Verification"] and first_cell_value in ["Household Work", "Shopping", "Childcare"]:
+                        for cell in row:
+                            cell.fill = yellow_fill
             
             # Auto-adjust column widths
             for col in ws.columns:
@@ -1088,14 +1115,17 @@ def main():
             output.seek(0)
             excel_data = output.read()
             
-            st.download_button(
-                label="Download All Results (Excel)",
-                data=excel_data,
-                file_name="time_estimates_all.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                key="excel_all",
-                use_container_width=True
-            )
+            col_left, col_right = st.columns([1, 3])
+            with col_left:
+                st.download_button(
+                    label="Download All Results (Excel)",
+                    data=excel_data,
+                    file_name="time_estimates_all.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    key="excel_all",
+                    type="primary",
+                    use_container_width=True
+                )
         except ImportError:
             st.warning("Excel export requires openpyxl and Pillow. Install with: pip install openpyxl pillow")
         except Exception as e:
