@@ -12,6 +12,46 @@ from pathlib import Path
 import warnings
 warnings.filterwarnings('ignore')
 
+# Load children in household filter mapping
+CHILDREN_FILTER_MAPPING = {
+    "All": {
+        "CHH0017C": None,  # None means no filter (include all)
+        "CHH0004C": None,
+        "CHH0514C": None,
+        "CHH1517C": None
+    },
+    "No children": {
+        "CHH0017C": [0],  # "No children"
+        "CHH0004C": None,
+        "CHH0514C": None,
+        "CHH1517C": None
+    },
+    "Children (0-17)": {
+        "CHH0017C": [1, 2, 3],  # "NOT No children" = One child, Two children, Three children or more
+        "CHH0004C": None,
+        "CHH0514C": None,
+        "CHH1517C": None
+    },
+    "Children (youngest 0-4)": {
+        "CHH0017C": None,
+        "CHH0004C": [1],  # "One or more children"
+        "CHH0514C": None,
+        "CHH1517C": None
+    },
+    "Children (youngest 5-14)": {
+        "CHH0017C": None,
+        "CHH0004C": [0],  # "No children"
+        "CHH0514C": [1],  # "One or more children"
+        "CHH1517C": None
+    },
+    "Children (youngest 15-17)": {
+        "CHH0017C": None,
+        "CHH0004C": [0],  # "No children"
+        "CHH0514C": [0],  # "No children"
+        "CHH1517C": [1]   # "One or more children"
+    }
+}
+
 # Set page config
 st.set_page_config(
     page_title="Time Use Survey 2022 - Time Estimates",
@@ -694,16 +734,62 @@ def main():
                         filters[var] = selected
         
         st.subheader("Children")
+        
+        # Children in Household filter
+        children_in_household_options = [
+            "All",
+            "No children",
+            "Children (0-17)",
+            "Children (youngest 0-4)",
+            "Children (youngest 5-14)",
+            "Children (youngest 15-17)"
+        ]
+        
+        selected_children_in_household = st.selectbox(
+            "Children in Household",
+            options=children_in_household_options,
+            index=0,
+            help="Select a category to automatically filter by children in household. This will set the individual children filters below."
+        )
+        
+        # Apply the mapping based on selection
+        if selected_children_in_household in CHILDREN_FILTER_MAPPING:
+            mapping = CHILDREN_FILTER_MAPPING[selected_children_in_household]
+            # First, clear all children-related filters
+            for var in ['CHH0017C', 'CHH0004C', 'CHH0514C', 'CHH1517C']:
+                if var in filters:
+                    del filters[var]
+            # Then apply the mapping
+            for var, value in mapping.items():
+                if value is not None:
+                    filters[var] = value
+                # If value is None, the filter is already cleared above
+        
+        # Individual children filters (shown for reference, but controlled by Children in Household)
         num_children = get_unique_values(df, 'CHH0017C')
         if num_children:
-            selected_children = st.multiselect(
-                "Number of children (0-17 years)",
-                options=num_children,
-                format_func=lambda x: format_option_label('CHH0017C', x),
-                help="Select one or more categories (e.g., select 1.0, 2.0, 3.0 to include all groups with children). Leave empty to include all."
-            )
-            if len(selected_children) > 0:
-                filters['CHH0017C'] = selected_children
+            # Get current filter value or show all
+            current_chh0017c = filters.get('CHH0017C', [])
+            if selected_children_in_household != "All":
+                # Show what's currently filtered (read-only display)
+                if current_chh0017c:
+                    filter_display = ", ".join([format_option_label('CHH0017C', x) for x in current_chh0017c])
+                    st.caption(f"Number of children (0-17 years): {filter_display} (set by Children in Household filter)")
+                else:
+                    st.caption("Number of children (0-17 years): All (set by Children in Household filter)")
+            else:
+                # Allow manual selection when "All" is selected
+                selected_children = st.multiselect(
+                    "Number of children (0-17 years)",
+                    options=num_children,
+                    default=current_chh0017c if current_chh0017c else [],
+                    format_func=lambda x: format_option_label('CHH0017C', x),
+                    help="Select one or more categories. Leave empty to include all. Note: This is overridden when 'Children in Household' is set to a specific option."
+                )
+                if len(selected_children) > 0:
+                    filters['CHH0017C'] = selected_children
+                elif 'CHH0017C' in filters:
+                    del filters['CHH0017C']
         
         child_age_vars = {
             'CHH0004C': 'Children 0-4 years (flag)',
@@ -715,14 +801,27 @@ def main():
             if var in df.columns:
                 values = get_unique_values(df, var)
                 if values:
-                    selected = st.multiselect(
-                        label,
-                        options=values,
-                        format_func=lambda x, v=var: format_option_label(v, x),
-                        help="Select one or more options. Leave empty to include all."
-                    )
-                    if len(selected) > 0:
-                        filters[var] = selected
+                    current_value = filters.get(var, [])
+                    if selected_children_in_household != "All":
+                        # Show what's currently filtered (read-only display)
+                        if current_value:
+                            filter_display = ", ".join([format_option_label(var, x) for x in current_value])
+                            st.caption(f"{label}: {filter_display} (set by Children in Household filter)")
+                        else:
+                            st.caption(f"{label}: All (set by Children in Household filter)")
+                    else:
+                        # Allow manual selection when "All" is selected
+                        selected = st.multiselect(
+                            label,
+                            options=values,
+                            default=current_value if current_value else [],
+                            format_func=lambda x, v=var: format_option_label(v, x),
+                            help="Select one or more options. Leave empty to include all. Note: This is overridden when 'Children in Household' is set to a specific option."
+                        )
+                        if len(selected) > 0:
+                            filters[var] = selected
+                        elif var in filters:
+                            del filters[var]
     
     # Update session state with current filters for real-time updates
     st.session_state.filters = filters
