@@ -52,6 +52,34 @@ CHILDREN_FILTER_MAPPING = {
     }
 }
 
+# Load spousal status filter mapping
+SPOUSAL_STATUS_MAPPING = {
+    "All": {
+        "PHSDFLG": None,  # None means no filter (include all)
+        "MAP_110C": None
+    },
+    "No Spouse": {
+        "PHSDFLG": [2],  # "No"
+        "MAP_110C": None
+    },
+    "With Spouse": {
+        "PHSDFLG": [1],  # "Yes"
+        "MAP_110C": None
+    },
+    "With Spouse (Employed)": {
+        "PHSDFLG": [1],  # "Yes"
+        "MAP_110C": [1]  # "Working at a paid job or business..."
+    },
+    "With Spouse (Keeping House)": {
+        "PHSDFLG": [1],  # "Yes"
+        "MAP_110C": [2]  # "Household work /caring for children"
+    },
+    "With Spouse (Retired)": {
+        "PHSDFLG": [1],  # "Yes"
+        "MAP_110C": [3]  # "Retired"
+    }
+}
+
 # Set page config
 st.set_page_config(
     page_title="Time Use Survey 2022 - Time Estimates",
@@ -714,24 +742,84 @@ def main():
     # RIGHT COLUMN: Spousal/Partner Information, Children
     with col3:
         st.subheader("Spousal/Partner Information")
+        
+        # Spousal Status filter
+        spousal_status_options = [
+            "All",
+            "No Spouse",
+            "With Spouse",
+            "With Spouse (Employed)",
+            "With Spouse (Keeping House)",
+            "With Spouse (Retired)"
+        ]
+        
+        selected_spousal_status = st.selectbox(
+            "Spousal Status",
+            options=spousal_status_options,
+            index=0,
+            help="Select a category to automatically filter by spousal status. This will set the individual spousal filters below."
+        )
+        
+        # Apply the mapping based on selection
+        if selected_spousal_status in SPOUSAL_STATUS_MAPPING:
+            mapping = SPOUSAL_STATUS_MAPPING[selected_spousal_status]
+            # First, clear all spousal-related filters (except MAP_D40A which is independent)
+            for var in ['PHSDFLG', 'MAP_110C']:
+                if var in filters:
+                    del filters[var]
+            # Then apply the mapping
+            for var, value in mapping.items():
+                if value is not None:
+                    filters[var] = value
+                # If value is None, the filter is already cleared above
+        
+        # Individual spousal filters (shown for reference, but controlled by Spousal Status)
         spouse_vars = {
             'PHSDFLG': 'Has spouse/partner in household',
-            'MAP_110C': 'Main activity - Spouse/partner - 12 months',
-            'MAP_D40A': 'Spouse/partner worked in last 12 months'
+            'MAP_110C': 'Main activity - Spouse/partner - 12 months'
         }
         
         for var, label in spouse_vars.items():
             if var in df.columns:
                 values = get_unique_values(df, var)
                 if values:
-                    selected = st.multiselect(
-                        label,
-                        options=values,
-                        format_func=lambda x, v=var: format_option_label(v, x),
-                        help="Select one or more options. Leave empty to include all."
-                    )
-                    if len(selected) > 0:
-                        filters[var] = selected
+                    current_value = filters.get(var, [])
+                    if selected_spousal_status != "All":
+                        # Show what's currently filtered (read-only display)
+                        if current_value:
+                            filter_display = ", ".join([format_option_label(var, x) for x in current_value])
+                            st.caption(f"{label}: {filter_display} (set by Spousal Status filter)")
+                        else:
+                            st.caption(f"{label}: All (set by Spousal Status filter)")
+                    else:
+                        # Allow manual selection when "All" is selected
+                        selected = st.multiselect(
+                            label,
+                            options=values,
+                            default=current_value if current_value else [],
+                            format_func=lambda x, v=var: format_option_label(v, x),
+                            help="Select one or more options. Leave empty to include all. Note: This is overridden when 'Spousal Status' is set to a specific option."
+                        )
+                        if len(selected) > 0:
+                            filters[var] = selected
+                        elif var in filters:
+                            del filters[var]
+        
+        # MAP_D40A is independent and always available for manual selection
+        if 'MAP_D40A' in df.columns:
+            values = get_unique_values(df, 'MAP_D40A')
+            if values:
+                selected_map_d40a = st.multiselect(
+                    'Spouse/partner worked in last 12 months',
+                    options=values,
+                    default=filters.get('MAP_D40A', []),
+                    format_func=lambda x: format_option_label('MAP_D40A', x),
+                    help="Select one or more options. Leave empty to include all."
+                )
+                if len(selected_map_d40a) > 0:
+                    filters['MAP_D40A'] = selected_map_d40a
+                elif 'MAP_D40A' in filters:
+                    del filters['MAP_D40A']
         
         st.subheader("Children")
         
