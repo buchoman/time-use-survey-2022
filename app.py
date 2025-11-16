@@ -1073,15 +1073,11 @@ def main():
             ))
             
             total_combinations = len(all_combinations)
-            st.info(f"Found {total_combinations} total combinations. Processing first 5 for testing.")
+            st.info(f"Found {total_combinations} total combinations to process.")
             
             if total_combinations == 0:
                 st.error("No combinations found. Please check the 'Variables to Combine.xlsx' file.")
                 return
-            
-            # Limit to first 5 for testing
-            all_combinations = all_combinations[:5]
-            total_combinations = len(all_combinations)
             
             # Initialize results list
             all_results = []
