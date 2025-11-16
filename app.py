@@ -1073,11 +1073,15 @@ def main():
             ))
             
             total_combinations = len(all_combinations)
-            st.info(f"Found {total_combinations} combinations to process.")
+            st.info(f"Found {total_combinations} total combinations. Processing first 5 for testing.")
             
             if total_combinations == 0:
                 st.error("No combinations found. Please check the 'Variables to Combine.xlsx' file.")
                 return
+            
+            # Limit to first 5 for testing
+            all_combinations = all_combinations[:5]
+            total_combinations = len(all_combinations)
             
             # Initialize results list
             all_results = []
@@ -1090,6 +1094,8 @@ def main():
             if len(bootstrap_cols) == 0:
                 st.error("No bootstrap weights found in the dataset. Cannot calculate variance estimates.")
                 return
+            
+            st.info(f"Using {len(bootstrap_cols)} bootstrap weights for variance estimation.")
             
             # Process each combination
             for combo_idx, (gender, age_group, main_activity, children, spouse) in enumerate(all_combinations):
@@ -1164,27 +1170,35 @@ def main():
                     category_estimates = {}
                     total_minutes = 0
                     
+                    # Work with a copy to avoid modifying the original
+                    working_df = combo_filtered_df.copy()
+                    
                     for category, vars_list in ACTIVITY_CATEGORIES.items():
-                        cat_vars = [v for v in vars_list if v in combo_filtered_df.columns]
+                        cat_vars = [v for v in vars_list if v in working_df.columns]
                         
                         if len(cat_vars) == 0:
                             category_estimates[category] = {'mean': np.nan, 'cv': np.nan}
                             continue
                         
-                        # Create sum variable
-                        combo_filtered_df['_CAT_SUM'] = combo_filtered_df[cat_vars].sum(axis=1)
+                        # Create sum variable (use a unique name per category to avoid conflicts)
+                        cat_sum_col = f'_CAT_SUM_{category.replace(" ", "_")}'
+                        working_df[cat_sum_col] = working_df[cat_vars].sum(axis=1)
                         
                         # Calculate weighted mean
-                        mean_est = calculate_weighted_mean(combo_filtered_df, '_CAT_SUM')
+                        mean_est = calculate_weighted_mean(working_df, cat_sum_col)
                         
                         # Calculate bootstrap variance
-                        variance = calculate_bootstrap_variance(combo_filtered_df, '_CAT_SUM', bootstrap_cols=bootstrap_cols)
+                        variance = calculate_bootstrap_variance(working_df, cat_sum_col, bootstrap_cols=bootstrap_cols)
                         std_error = np.sqrt(variance) if not np.isnan(variance) else np.nan
                         cv = (std_error / mean_est * 100) if not np.isnan(mean_est) and mean_est != 0 else np.nan
                         
                         category_estimates[category] = {'mean': mean_est, 'cv': cv}
                         if not np.isnan(mean_est):
                             total_minutes += mean_est
+                        
+                        # Clean up temporary column
+                        if cat_sum_col in working_df.columns:
+                            working_df.drop(columns=[cat_sum_col], inplace=True)
                     
                     # Calculate total CV (weighted average of CVs, simplified)
                     total_variance = sum([cat['mean']**2 * (cat['cv']/100)**2 for cat in category_estimates.values() 
@@ -1215,6 +1229,12 @@ def main():
                 progress_bar.progress((combo_idx + 1) / total_combinations)
             
             # Create results DataFrame
+            if len(all_results) == 0:
+                st.error("No results generated. Please check the filter mappings and data.")
+                progress_bar.empty()
+                status_text.empty()
+                return
+            
             results_df = pd.DataFrame(all_results)
             
             # Round numeric columns
@@ -1227,7 +1247,11 @@ def main():
             
             progress_bar.empty()
             status_text.empty()
-            st.success(f"Calculations complete! Processed {total_combinations} combinations.")
+            st.success(f"Calculations complete! Processed {len(all_results)} combinations.")
+            
+            # Display summary
+            st.info(f"Results DataFrame shape: {results_df.shape} (rows x columns)")
+            st.info(f"Columns: {list(results_df.columns)}")
             
             # Provide download button
             csv = results_df.to_csv(index=False)
@@ -1243,6 +1267,11 @@ def main():
             st.error(f"Error processing combinations: {e}")
             import traceback
             st.text(traceback.format_exc())
+            # Clean up progress indicators if they exist
+            if 'progress_bar' in locals():
+                progress_bar.empty()
+            if 'status_text' in locals():
+                status_text.empty()
     
     # Display all groups results if available
     if 'all_groups_results' in st.session_state and st.session_state.all_groups_results is not None:
