@@ -10,6 +10,7 @@ import numpy as np
 import pyreadstat
 from pathlib import Path
 import warnings
+import itertools
 warnings.filterwarnings('ignore')
 
 # Load children in household filter mapping
@@ -1039,6 +1040,210 @@ def main():
         overall_progress_bar.empty()
         overall_status_text.empty()
         st.success("Calculations complete!")
+    
+    # Calculate All Groups feature
+    st.markdown("---")
+    st.subheader("🔄 Calculate All Groups")
+    st.markdown("Calculate estimates for all combinations of demographic variables. This will process 864 combinations and may take several hours.")
+    
+    if st.button("Calculate All Groups", type="primary"):
+        # Load the combinations file
+        try:
+            combinations_df = pd.read_excel("New Categories/Variables to Combine.xlsx", header=None)
+            # Get headers from row 2 (index 2)
+            headers = combinations_df.iloc[2].values
+            # Get data starting from row 3 (index 3)
+            data_rows = combinations_df.iloc[3:].reset_index(drop=True)
+            
+            # Extract unique values for each variable to generate all combinations
+            gender_values = sorted(data_rows.iloc[:, 1].dropna().unique())
+            age_values = sorted(data_rows.iloc[:, 2].dropna().unique())
+            activity_values = sorted(data_rows.iloc[:, 3].dropna().unique())
+            children_values = sorted(data_rows.iloc[:, 4].dropna().unique())
+            spouse_values = sorted(data_rows.iloc[:, 5].dropna().unique())
+            
+            # Generate all combinations
+            all_combinations = list(itertools.product(
+                gender_values, age_values, activity_values, children_values, spouse_values
+            ))
+            
+            total_combinations = len(all_combinations)
+            st.info(f"Found {total_combinations} combinations to process.")
+            
+            if total_combinations == 0:
+                st.error("No combinations found. Please check the 'Variables to Combine.xlsx' file.")
+                return
+            
+            # Initialize results list
+            all_results = []
+            
+            # Progress tracking
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+            
+            bootstrap_cols = get_bootstrap_weights(df)
+            if len(bootstrap_cols) == 0:
+                st.error("No bootstrap weights found in the dataset. Cannot calculate variance estimates.")
+                return
+            
+            # Process each combination
+            for combo_idx, (gender, age_group, main_activity, children, spouse) in enumerate(all_combinations):
+                status_text.text(f"Processing combination {combo_idx + 1}/{total_combinations}: {gender}, {age_group}, {main_activity}, {children}, {spouse}")
+                
+                # Build filters for this combination
+                combo_filters = {}
+                
+                # Map Gender
+                if gender != "All":
+                    if gender == "Men+":
+                        combo_filters['GENDER2'] = [1]
+                    elif gender == "Women+":
+                        combo_filters['GENDER2'] = [2]
+                
+                # Map Age Group
+                if age_group != "All":
+                    if age_group == "75 years and over":
+                        combo_filters['AGEGR10'] = [7]
+                    elif age_group == "NOT 75 years and over":
+                        combo_filters['AGEGR10'] = [1, 2, 3, 4, 5, 6]
+                
+                # Map Main activity
+                if main_activity != "All":
+                    activity_map = {
+                        "Working at a paid job or business": 1,
+                        "Working at a paid job or business...": 1,
+                        "Household work / caring for children": 3,
+                        "Household work /caring for children": 3,
+                        "Retired": 4
+                    }
+                    if main_activity in activity_map:
+                        combo_filters['ACT7DAYC'] = [activity_map[main_activity]]
+                
+                # Map Children in Household using the mapping
+                if children != "All":
+                    if children in CHILDREN_FILTER_MAPPING:
+                        child_mapping = CHILDREN_FILTER_MAPPING[children]
+                        for var, value in child_mapping.items():
+                            if value is not None:
+                                combo_filters[var] = value
+                
+                # Map Spouse in Household using the mapping
+                if spouse != "All":
+                    if spouse in SPOUSAL_STATUS_MAPPING:
+                        spouse_mapping = SPOUSAL_STATUS_MAPPING[spouse]
+                        for var, value in spouse_mapping.items():
+                            if value is not None:
+                                combo_filters[var] = value
+                
+                # Apply filters
+                combo_filtered_df = filter_data(df, combo_filters)
+                
+                if len(combo_filtered_df) == 0:
+                    # No records for this combination - still add row with NaN values
+                    row_data = {
+                        'Gender': gender,
+                        'Age Group': age_group,
+                        'Main activity - Last Week': main_activity,
+                        'Children in Household': children,
+                        'Spouse in Household': spouse
+                    }
+                    # Add activity categories with NaN
+                    for category in ACTIVITY_CATEGORIES.keys():
+                        row_data[f'{category} - Average'] = np.nan
+                        row_data[f'{category} - CV'] = np.nan
+                    row_data['TOTAL - Average'] = np.nan
+                    row_data['TOTAL - CV'] = np.nan
+                    all_results.append(row_data)
+                else:
+                    # Calculate category estimates
+                    category_estimates = {}
+                    total_minutes = 0
+                    
+                    for category, vars_list in ACTIVITY_CATEGORIES.items():
+                        cat_vars = [v for v in vars_list if v in combo_filtered_df.columns]
+                        
+                        if len(cat_vars) == 0:
+                            category_estimates[category] = {'mean': np.nan, 'cv': np.nan}
+                            continue
+                        
+                        # Create sum variable
+                        combo_filtered_df['_CAT_SUM'] = combo_filtered_df[cat_vars].sum(axis=1)
+                        
+                        # Calculate weighted mean
+                        mean_est = calculate_weighted_mean(combo_filtered_df, '_CAT_SUM')
+                        
+                        # Calculate bootstrap variance
+                        variance = calculate_bootstrap_variance(combo_filtered_df, '_CAT_SUM', bootstrap_cols=bootstrap_cols)
+                        std_error = np.sqrt(variance) if not np.isnan(variance) else np.nan
+                        cv = (std_error / mean_est * 100) if not np.isnan(mean_est) and mean_est != 0 else np.nan
+                        
+                        category_estimates[category] = {'mean': mean_est, 'cv': cv}
+                        if not np.isnan(mean_est):
+                            total_minutes += mean_est
+                    
+                    # Calculate total CV (weighted average of CVs, simplified)
+                    total_variance = sum([cat['mean']**2 * (cat['cv']/100)**2 for cat in category_estimates.values() 
+                                         if not np.isnan(cat['mean']) and not np.isnan(cat['cv'])])
+                    total_std_error = np.sqrt(total_variance) if total_variance > 0 else np.nan
+                    total_cv = (total_std_error / total_minutes * 100) if total_minutes > 0 and not np.isnan(total_std_error) else np.nan
+                    
+                    # Build row data
+                    row_data = {
+                        'Gender': gender,
+                        'Age Group': age_group,
+                        'Main activity - Last Week': main_activity,
+                        'Children in Household': children,
+                        'Spouse in Household': spouse
+                    }
+                    
+                    # Add activity category results
+                    for category in ACTIVITY_CATEGORIES.keys():
+                        row_data[f'{category} - Average'] = category_estimates.get(category, {}).get('mean', np.nan)
+                        row_data[f'{category} - CV'] = category_estimates.get(category, {}).get('cv', np.nan)
+                    
+                    row_data['TOTAL - Average'] = total_minutes
+                    row_data['TOTAL - CV'] = total_cv
+                    
+                    all_results.append(row_data)
+                
+                # Update progress
+                progress_bar.progress((combo_idx + 1) / total_combinations)
+            
+            # Create results DataFrame
+            results_df = pd.DataFrame(all_results)
+            
+            # Round numeric columns
+            for col in results_df.columns:
+                if col not in ['Gender', 'Age Group', 'Main activity - Last Week', 'Children in Household', 'Spouse in Household']:
+                    results_df[col] = pd.to_numeric(results_df[col], errors='coerce').round(2)
+            
+            # Store in session state
+            st.session_state.all_groups_results = results_df
+            
+            progress_bar.empty()
+            status_text.empty()
+            st.success(f"Calculations complete! Processed {total_combinations} combinations.")
+            
+            # Provide download button
+            csv = results_df.to_csv(index=False)
+            st.download_button(
+                label="Download All Groups Results (CSV)",
+                data=csv,
+                file_name="all_groups_results.csv",
+                mime="text/csv",
+                type="primary"
+            )
+            
+        except Exception as e:
+            st.error(f"Error processing combinations: {e}")
+            import traceback
+            st.text(traceback.format_exc())
+    
+    # Display all groups results if available
+    if 'all_groups_results' in st.session_state and st.session_state.all_groups_results is not None:
+        st.subheader("All Groups Results Preview")
+        st.dataframe(st.session_state.all_groups_results.head(20), use_container_width=True)
+        st.caption(f"Showing first 20 of {len(st.session_state.all_groups_results)} rows. Use the download button above to get the full results.")
     
     # Display results
     if 'results' in st.session_state and st.session_state.results is not None:
