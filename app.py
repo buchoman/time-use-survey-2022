@@ -1272,8 +1272,47 @@ def main():
     # Display all groups results if available
     if 'all_groups_results' in st.session_state and st.session_state.all_groups_results is not None:
         st.subheader("All Groups Results Preview")
-        st.dataframe(st.session_state.all_groups_results.head(20), use_container_width=True)
-        st.caption(f"Showing first 20 of {len(st.session_state.all_groups_results)} rows. Use the download button above to get the full results.")
+        results_df = st.session_state.all_groups_results
+        st.dataframe(results_df.head(20), use_container_width=True)
+        st.caption(f"Showing first 20 of {len(results_df)} rows. Download the full results using the button below.")
+        
+        # Provide download buttons for CSV and Excel
+        col_csv, col_excel = st.columns(2)
+        
+        with col_csv:
+            csv = results_df.to_csv(index=False)
+            st.download_button(
+                label="Download All Groups Results (CSV)",
+                data=csv,
+                file_name="all_groups_results.csv",
+                mime="text/csv",
+                type="primary",
+                key="download_all_groups_csv",
+                use_container_width=True
+            )
+        
+        with col_excel:
+            try:
+                from io import BytesIO
+                output = BytesIO()
+                with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                    results_df.to_excel(writer, sheet_name='All Groups Results', index=False)
+                output.seek(0)
+                excel_data = output.read()
+                
+                st.download_button(
+                    label="Download All Groups Results (Excel)",
+                    data=excel_data,
+                    file_name="all_groups_results.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    type="primary",
+                    key="download_all_groups_excel",
+                    use_container_width=True
+                )
+            except ImportError:
+                st.info("Excel export requires openpyxl. Install with: pip install openpyxl")
+            except Exception as e:
+                st.warning(f"Excel export not available: {e}")
     
     # Display results
     if 'results' in st.session_state and st.session_state.results is not None:
