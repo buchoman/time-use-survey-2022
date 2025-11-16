@@ -91,6 +91,7 @@ st.set_page_config(
 # Data paths
 DATA_DIR = Path("TU_ET_2022/Data_Données")
 MAIN_FILE = DATA_DIR / "TU_ET_2022_Main-Principal_PUMF.sas7bdat"
+COMBINATIONS_FILE = Path("New Categories/Variables to Combine.xlsx")
 
 # Value label mappings for filter variables
 VALUE_LABELS = {
@@ -1049,7 +1050,11 @@ def main():
     if st.button("Calculate All Groups", type="primary"):
         # Load the combinations file
         try:
-            combinations_df = pd.read_excel("New Categories/Variables to Combine.xlsx", header=None)
+            if not COMBINATIONS_FILE.exists():
+                st.error(f"Combinations file not found at: {COMBINATIONS_FILE}. Please ensure the file exists.")
+                return
+            
+            combinations_df = pd.read_excel(str(COMBINATIONS_FILE), header=None)
             # Get headers from row 2 (index 2)
             headers = combinations_df.iloc[2].values
             # Get data starting from row 3 (index 3)
