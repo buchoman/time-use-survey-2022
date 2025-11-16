@@ -1045,9 +1045,27 @@ def main():
     # Calculate All Groups feature
     st.markdown("---")
     st.subheader("🔄 Calculate All Groups")
-    st.markdown("Calculate estimates for all combinations of demographic variables. This will process 864 combinations and may take several hours.")
+    st.markdown("Calculate estimates for combinations of demographic variables. Select a range below to process a subset, or leave the default (1 to 864) to process all combinations. Processing all 864 combinations may take several hours.")
     
-    if st.button("Calculate All Groups", type="primary"):
+    # Range selection UI
+    col_start, col_end = st.columns(2)
+    with col_start:
+        start_range = st.number_input("Start Combination", min_value=1, max_value=864, value=1, step=1, 
+                                      help="Starting combination number (1-based)")
+    with col_end:
+        end_range = st.number_input("End Combination", min_value=1, max_value=864, value=864, step=1,
+                                    help="Ending combination number (1-based, inclusive)")
+    
+    # Validate range
+    if start_range > end_range:
+        st.error("Start combination must be less than or equal to end combination.")
+        range_valid = False
+    else:
+        range_valid = True
+        if start_range != 1 or end_range != 864:
+            st.info(f"Will process combinations {start_range} to {end_range} (total: {end_range - start_range + 1} combinations)")
+    
+    if st.button("Calculate All Groups", type="primary", disabled=not range_valid):
         # Load the combinations file
         try:
             if not COMBINATIONS_FILE.exists():
@@ -1073,11 +1091,31 @@ def main():
             ))
             
             total_combinations = len(all_combinations)
-            st.info(f"Found {total_combinations} total combinations to process.")
+            st.info(f"Found {total_combinations} total combinations available.")
             
             if total_combinations == 0:
                 st.error("No combinations found. Please check the 'Variables to Combine.xlsx' file.")
                 return
+            
+            # Validate and clamp range to available combinations
+            if start_range > total_combinations:
+                st.error(f"Start combination ({start_range}) exceeds total available combinations ({total_combinations}).")
+                return
+            if end_range > total_combinations:
+                st.warning(f"End combination ({end_range}) exceeds total available combinations ({total_combinations}). Clamping to {total_combinations}.")
+                end_range = total_combinations
+            
+            # Apply range selection (convert from 1-based to 0-based indexing)
+            start_idx = start_range - 1  # Convert to 0-based
+            end_idx = end_range  # Keep as-is since Python slicing is exclusive on the end
+            selected_combinations = all_combinations[start_idx:end_idx]
+            combinations_to_process = len(selected_combinations)
+            
+            if combinations_to_process == 0:
+                st.error(f"No combinations in the selected range ({start_range} to {end_range}).")
+                return
+            
+            st.info(f"Processing {combinations_to_process} combinations (from {start_range} to {end_range} out of {total_combinations} total).")
             
             # Initialize results list
             all_results = []
@@ -1093,9 +1131,12 @@ def main():
             
             st.info(f"Using {len(bootstrap_cols)} bootstrap weights for variance estimation.")
             
-            # Process each combination
-            for combo_idx, (gender, age_group, main_activity, children, spouse) in enumerate(all_combinations):
-                status_text.text(f"Processing combination {combo_idx + 1}/{total_combinations}: {gender}, {age_group}, {main_activity}, {children}, {spouse}")
+            # Process each combination in the selected range
+            for local_idx, (gender, age_group, main_activity, children, spouse) in enumerate(selected_combinations):
+                # Calculate the actual combination number (1-based) for display
+                actual_combo_num = start_range + local_idx
+                combo_idx = start_idx + local_idx  # 0-based index in full list
+                status_text.text(f"Processing combination {actual_combo_num} ({local_idx + 1}/{combinations_to_process} in range): {gender}, {age_group}, {main_activity}, {children}, {spouse}")
                 
                 # Build filters for this combination
                 combo_filters = {}
@@ -1222,7 +1263,7 @@ def main():
                     all_results.append(row_data)
                 
                 # Update progress
-                progress_bar.progress((combo_idx + 1) / total_combinations)
+                progress_bar.progress((local_idx + 1) / combinations_to_process)
             
             # Create results DataFrame
             if len(all_results) == 0:
