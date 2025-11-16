@@ -595,6 +595,113 @@ def get_unique_values(df, column):
     unique_vals = df[column].dropna().unique()
     return sorted([v for v in unique_vals if pd.notna(v)])
 
+def calculate_sample_size(df, var, weight_col='WGHT_PER'):
+    """Calculate effective sample size (unweighted count of non-missing values)"""
+    if var not in df.columns:
+        return 0
+    # Count non-missing values for the variable
+    mask = df[var].notna() & (df[weight_col] > 0)
+    return mask.sum()
+
+def get_geographic_level(filters):
+    """Determine geographic level from filters"""
+    # Check if region or province filters are applied
+    if 'REGION' in filters and filters['REGION'] is not None:
+        if isinstance(filters['REGION'], list) and len(filters['REGION']) == 1:
+            return 'region'
+        elif isinstance(filters['REGION'], list) and len(filters['REGION']) > 1:
+            return 'multi_region'
+    if 'PRV' in filters and filters['PRV'] is not None:
+        if isinstance(filters['PRV'], list) and len(filters['PRV']) == 1:
+            return 'province'
+        elif isinstance(filters['PRV'], list) and len(filters['PRV']) > 1:
+            return 'multi_province'
+    return 'national'
+
+def assign_quality_release_code(n, cv, geographic_level='national'):
+    """
+    Assign quality release code based on sample size (n), CV, and geographic level.
+    
+    Based on Statistics Canada quality release guidelines:
+    - A: Acceptable (good quality)
+    - B: Marginal (use with caution)
+    - C: Unacceptable (suppress)
+    - F: Too unreliable to publish
+    - X: Suppressed for confidentiality (n < 10)
+    
+    Parameters:
+    n: sample size (unweighted count)
+    cv: coefficient of variation (percentage)
+    geographic_level: 'national', 'region', 'province', 'multi_region', 'multi_province'
+    
+    Returns:
+    Quality release code (A, B, C, F, or X)
+    """
+    # Handle missing or invalid values
+    if pd.isna(n) or pd.isna(cv) or n < 0 or cv < 0:
+        return 'F'
+    
+    # Confidentiality suppression: n < 10
+    if n < 10:
+        return 'X'
+    
+    # Determine thresholds based on geographic level
+    # More lenient thresholds for national level, stricter for sub-national
+    if geographic_level == 'national':
+        # National level thresholds
+        if n >= 30:
+            if cv <= 16.5:
+                return 'A'
+            elif cv <= 33.3:
+                return 'B'
+            else:
+                return 'C'
+        elif n >= 10:
+            if cv <= 16.5:
+                return 'B'
+            elif cv <= 33.3:
+                return 'C'
+            else:
+                return 'F'
+        else:
+            return 'F'
+    elif geographic_level in ['region', 'province']:
+        # Regional/Provincial level thresholds (stricter)
+        if n >= 30:
+            if cv <= 16.5:
+                return 'A'
+            elif cv <= 33.3:
+                return 'B'
+            else:
+                return 'C'
+        elif n >= 10:
+            if cv <= 16.5:
+                return 'B'
+            elif cv <= 33.3:
+                return 'C'
+            else:
+                return 'F'
+        else:
+            return 'F'
+    else:
+        # Multi-region or multi-province (use national thresholds)
+        if n >= 30:
+            if cv <= 16.5:
+                return 'A'
+            elif cv <= 33.3:
+                return 'B'
+            else:
+                return 'C'
+        elif n >= 10:
+            if cv <= 16.5:
+                return 'B'
+            elif cv <= 33.3:
+                return 'C'
+            else:
+                return 'F'
+        else:
+            return 'F'
+
 def format_option_label(var_name, value):
     """Format option label for selectbox"""
     label = format_value(var_name, value)
@@ -961,6 +1068,9 @@ def main():
             overall_status_text.empty()
             return
         
+        # Get geographic level for quality release codes
+        geographic_level = get_geographic_level(filters)
+        
         # Calculate for each DUR variable
         progress_bar = st.progress(0)
         status_text = st.empty()
@@ -972,6 +1082,13 @@ def main():
             mean_est = calculate_weighted_mean(filtered_df, var)
             variance = calculate_bootstrap_variance(filtered_df, var, bootstrap_cols=bootstrap_cols)
             std_error = np.sqrt(variance) if not np.isnan(variance) else np.nan
+            cv = (std_error / mean_est * 100) if not np.isnan(mean_est) and mean_est != 0 else np.nan
+            
+            # Calculate sample size
+            n = calculate_sample_size(filtered_df, var)
+            
+            # Assign quality release code
+            quality_code = assign_quality_release_code(n, cv, geographic_level)
             
             # Find category
             category = "Other"
@@ -987,10 +1104,12 @@ def main():
                 'Activity Code': var,
                 'Activity Description': activity_desc,
                 'Activity Category': category,
+                'Sample Size (n)': n,
                 'Mean Minutes Per Day': mean_est,
                 'Variance': variance,
                 'Standard Error': std_error,
-                'Coefficient of Variation': (std_error / mean_est * 100) if not np.isnan(mean_est) and mean_est != 0 else np.nan
+                'Coefficient of Variation': cv,
+                'Quality Release Code': quality_code
             })
             
             # Update both progress bars
@@ -1023,13 +1142,22 @@ def main():
             # Calculate bootstrap variance for the sum
             variance = calculate_bootstrap_variance(filtered_df, '_CAT_SUM', bootstrap_cols=bootstrap_cols)
             std_error = np.sqrt(variance) if not np.isnan(variance) else np.nan
+            cv = (std_error / mean_est * 100) if not np.isnan(mean_est) and mean_est != 0 else np.nan
+            
+            # Calculate sample size for the category (count of records with any activity in this category)
+            n = calculate_sample_size(filtered_df, '_CAT_SUM')
+            
+            # Assign quality release code
+            quality_code = assign_quality_release_code(n, cv, geographic_level)
             
             category_results_list.append({
                 'Activity Category': category,
+                'Sample Size (n)': n,
                 'Mean Minutes Per Day': mean_est,
                 'Variance': variance,
                 'Standard Error': std_error,
-                'Coefficient of Variation': (std_error / mean_est * 100) if not np.isnan(mean_est) and mean_est != 0 else np.nan
+                'Coefficient of Variation': cv,
+                'Quality Release Code': quality_code
             })
             
             # Update overall progress bar
@@ -1186,6 +1314,9 @@ def main():
                 # Apply filters
                 combo_filtered_df = filter_data(df, combo_filters)
                 
+                # Get geographic level for this combination
+                combo_geographic_level = get_geographic_level(combo_filters)
+                
                 if len(combo_filtered_df) == 0:
                     # No records for this combination - still add row with NaN values
                     row_data = {
@@ -1199,8 +1330,12 @@ def main():
                     for category in ACTIVITY_CATEGORIES.keys():
                         row_data[f'{category} - Average'] = np.nan
                         row_data[f'{category} - CV'] = np.nan
+                        row_data[f'{category} - Sample Size (n)'] = 0
+                        row_data[f'{category} - Quality Release Code'] = 'F'
                     row_data['TOTAL - Average'] = np.nan
                     row_data['TOTAL - CV'] = np.nan
+                    row_data['TOTAL - Sample Size (n)'] = 0
+                    row_data['TOTAL - Quality Release Code'] = 'F'
                     all_results.append(row_data)
                 else:
                     # Calculate category estimates
@@ -1214,7 +1349,7 @@ def main():
                         cat_vars = [v for v in vars_list if v in working_df.columns]
                         
                         if len(cat_vars) == 0:
-                            category_estimates[category] = {'mean': np.nan, 'cv': np.nan}
+                            category_estimates[category] = {'mean': np.nan, 'cv': np.nan, 'n': 0, 'quality_code': 'F'}
                             continue
                         
                         # Create sum variable (use a unique name per category to avoid conflicts)
@@ -1229,7 +1364,13 @@ def main():
                         std_error = np.sqrt(variance) if not np.isnan(variance) else np.nan
                         cv = (std_error / mean_est * 100) if not np.isnan(mean_est) and mean_est != 0 else np.nan
                         
-                        category_estimates[category] = {'mean': mean_est, 'cv': cv}
+                        # Calculate sample size
+                        n = calculate_sample_size(working_df, cat_sum_col)
+                        
+                        # Assign quality release code
+                        quality_code = assign_quality_release_code(n, cv, combo_geographic_level)
+                        
+                        category_estimates[category] = {'mean': mean_est, 'cv': cv, 'n': n, 'quality_code': quality_code}
                         if not np.isnan(mean_est):
                             total_minutes += mean_est
                         
@@ -1243,6 +1384,11 @@ def main():
                     total_std_error = np.sqrt(total_variance) if total_variance > 0 else np.nan
                     total_cv = (total_std_error / total_minutes * 100) if total_minutes > 0 and not np.isnan(total_std_error) else np.nan
                     
+                    # Calculate total sample size (minimum n across all categories, or use a representative category)
+                    # For total, we'll use the maximum n from categories as a proxy
+                    total_n = max([cat.get('n', 0) for cat in category_estimates.values()], default=0)
+                    total_quality_code = assign_quality_release_code(total_n, total_cv, combo_geographic_level)
+                    
                     # Build row data
                     row_data = {
                         'Gender': gender,
@@ -1254,11 +1400,16 @@ def main():
                     
                     # Add activity category results
                     for category in ACTIVITY_CATEGORIES.keys():
-                        row_data[f'{category} - Average'] = category_estimates.get(category, {}).get('mean', np.nan)
-                        row_data[f'{category} - CV'] = category_estimates.get(category, {}).get('cv', np.nan)
+                        cat_data = category_estimates.get(category, {})
+                        row_data[f'{category} - Average'] = cat_data.get('mean', np.nan)
+                        row_data[f'{category} - CV'] = cat_data.get('cv', np.nan)
+                        row_data[f'{category} - Sample Size (n)'] = cat_data.get('n', 0)
+                        row_data[f'{category} - Quality Release Code'] = cat_data.get('quality_code', 'F')
                     
                     row_data['TOTAL - Average'] = total_minutes
                     row_data['TOTAL - CV'] = total_cv
+                    row_data['TOTAL - Sample Size (n)'] = total_n
+                    row_data['TOTAL - Quality Release Code'] = total_quality_code
                     
                     all_results.append(row_data)
                 
@@ -1355,15 +1506,32 @@ def main():
             except Exception as e:
                 st.warning(f"Excel export not available: {e}")
     
+    # Quality Release Code Information
+    with st.expander("ℹ️ Quality Release Code Guidelines"):
+        st.markdown("""
+        **Quality Release Codes** are assigned based on sample size (n), coefficient of variation (CV), and geographic level:
+        
+        - **A**: Acceptable (good quality) - n ≥ 30 and CV ≤ 16.5%
+        - **B**: Marginal (use with caution) - n ≥ 30 and 16.5% < CV ≤ 33.3%, or n ≥ 10 and CV ≤ 16.5%
+        - **C**: Unacceptable (suppress) - n ≥ 30 and CV > 33.3%, or n ≥ 10 and 16.5% < CV ≤ 33.3%
+        - **F**: Too unreliable to publish - n ≥ 10 and CV > 33.3%, or n < 10
+        - **X**: Suppressed for confidentiality - n < 10
+        
+        Note: Thresholds may vary slightly by geographic level (national vs. regional/provincial).
+        """)
+    
     # Display results
     if 'results' in st.session_state and st.session_state.results is not None:
         results_df = st.session_state.results.copy()
         
         # Round numeric columns
-        numeric_cols = ['Mean Minutes Per Day', 'Variance', 'Standard Error', 'Coefficient of Variation']
+        numeric_cols = ['Sample Size (n)', 'Mean Minutes Per Day', 'Variance', 'Standard Error', 'Coefficient of Variation']
         for col in numeric_cols:
             if col in results_df.columns:
-                results_df[col] = results_df[col].round(2)
+                if col == 'Sample Size (n)':
+                    results_df[col] = results_df[col].astype(int)
+                else:
+                    results_df[col] = results_df[col].round(2)
         
         # Add CSS for subtle table shading and column alignment
         st.markdown("""
@@ -1383,7 +1551,7 @@ def main():
         // Right-justify specific column headers and cells
         function alignNumericColumns() {
             const tables = document.querySelectorAll('div[data-testid="stDataFrame"] table');
-            const numericHeaders = ['Mean Minutes Per Day', 'Variance', 'Standard Error', 'Coefficient of Variation'];
+            const numericHeaders = ['Sample Size (n)', 'Mean Minutes Per Day', 'Variance', 'Standard Error', 'Coefficient of Variation'];
             
             tables.forEach(table => {
                 const headers = Array.from(table.querySelectorAll('thead th'));
@@ -1419,7 +1587,10 @@ def main():
             # Round
             for col in numeric_cols:
                 if col in category_results.columns:
-                    category_results[col] = category_results[col].round(2)
+                    if col == 'Sample Size (n)':
+                        category_results[col] = category_results[col].astype(int)
+                    else:
+                        category_results[col] = category_results[col].round(2)
             
             st.dataframe(category_results, use_container_width=True, height=400)
         
@@ -1541,23 +1712,26 @@ def main():
                 
                 # MIDDLE SECTION: Activity Categories
                 all_data.append(["Activity Category Breakdown"])
-                all_data.append(["Activity Category", "Mean Minutes Per Day", "Variance", "Standard Error", "Coefficient of Variation (%)"])
+                all_data.append(["Activity Category", "Sample Size (n)", "Mean Minutes Per Day", "Variance", "Standard Error", "Coefficient of Variation (%)", "Quality Release Code"])
                 
                 if 'category_results' in st.session_state and st.session_state.category_results is not None:
                     category_results = st.session_state.category_results.copy()
                     for _, row in category_results.iterrows():
                         all_data.append([
                             row['Activity Category'],
-                            round(row['Mean Minutes Per Day'], 2),
-                            round(row['Variance'], 2),
-                            round(row['Standard Error'], 2),
-                            round(row['Coefficient of Variation'], 2) if not pd.isna(row['Coefficient of Variation']) else ""
+                            int(row['Sample Size (n)']) if 'Sample Size (n)' in row and not pd.isna(row['Sample Size (n)']) else "",
+                            round(row['Mean Minutes Per Day'], 2) if not pd.isna(row['Mean Minutes Per Day']) else "",
+                            round(row['Variance'], 2) if not pd.isna(row['Variance']) else "",
+                            round(row['Standard Error'], 2) if not pd.isna(row['Standard Error']) else "",
+                            round(row['Coefficient of Variation'], 2) if not pd.isna(row['Coefficient of Variation']) else "",
+                            row.get('Quality Release Code', '') if 'Quality Release Code' in row else ""
                         ])
                     
                     # Add total row
                     total_minutes = category_results['Mean Minutes Per Day'].sum()
-                    all_data.append(["TOTAL", round(total_minutes, 2), "", "", ""])
-                    all_data.append(["Verification (should equal 1440):", round(total_minutes, 2)])
+                    total_n = category_results['Sample Size (n)'].max() if 'Sample Size (n)' in category_results.columns else ""
+                    all_data.append(["TOTAL", total_n, round(total_minutes, 2), "", "", "", ""])
+                    all_data.append(["Verification (should equal 1440):", "", round(total_minutes, 2), "", "", "", ""])
                 
                 all_data.append([""])
                 all_data.append([""])
@@ -1565,10 +1739,10 @@ def main():
                 # BOTTOM SECTION: Individual Activity Codes
                 all_data.append(["Individual Activity Code Breakdown"])
                 all_data.append(["Activity Code", "Activity Description", "Activity Category", 
-                               "Mean Minutes Per Day", "Variance", "Standard Error", "Coefficient of Variation (%)"])
+                               "Sample Size (n)", "Mean Minutes Per Day", "Variance", "Standard Error", "Coefficient of Variation (%)", "Quality Release Code"])
                 
                 display_cols = ['Activity Code', 'Activity Description', 'Activity Category', 
-                              'Mean Minutes Per Day', 'Variance', 'Standard Error', 'Coefficient of Variation']
+                              'Sample Size (n)', 'Mean Minutes Per Day', 'Variance', 'Standard Error', 'Coefficient of Variation', 'Quality Release Code']
                 results_export = results_df[[c for c in display_cols if c in results_df.columns]].copy()
                 
                 for _, row in results_export.iterrows():
@@ -1576,16 +1750,18 @@ def main():
                         row['Activity Code'],
                         row['Activity Description'],
                         row['Activity Category'],
-                        round(row['Mean Minutes Per Day'], 2),
-                        round(row['Variance'], 2),
-                        round(row['Standard Error'], 2),
-                        round(row['Coefficient of Variation'], 2) if not pd.isna(row['Coefficient of Variation']) else ""
+                        int(row['Sample Size (n)']) if 'Sample Size (n)' in row and not pd.isna(row['Sample Size (n)']) else "",
+                        round(row['Mean Minutes Per Day'], 2) if not pd.isna(row['Mean Minutes Per Day']) else "",
+                        round(row['Variance'], 2) if not pd.isna(row['Variance']) else "",
+                        round(row['Standard Error'], 2) if not pd.isna(row['Standard Error']) else "",
+                        round(row['Coefficient of Variation'], 2) if not pd.isna(row['Coefficient of Variation']) else "",
+                        row.get('Quality Release Code', '') if 'Quality Release Code' in row else ""
                     ])
                 
                 # Add total row
                 total_minutes_detail = results_export['Mean Minutes Per Day'].sum()
-                all_data.append(["TOTAL", "", "", round(total_minutes_detail, 2), "", "", ""])
-                all_data.append(["Verification (should equal 1440):", "", "", round(total_minutes_detail, 2), "", "", ""])
+                all_data.append(["TOTAL", "", "", "", round(total_minutes_detail, 2), "", "", "", ""])
+                all_data.append(["Verification (should equal 1440):", "", "", "", round(total_minutes_detail, 2), "", "", "", ""])
                 
                 # Convert to DataFrame and write
                 export_df = pd.DataFrame(all_data)
