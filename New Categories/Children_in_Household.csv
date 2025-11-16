@@ -1,0 +1,7 @@
+﻿Children in Household,Children,Children 0-4 (flag),Children 5-14 (flag),Children 15-17 (flag)
+All,All,All,All,All
+No children,No children,All,All,All
+Children (0-17),NOT No children,All,All,All
+Children (youngest 0-4),All,One or more children,All,All
+Children (youngest 5-14),All,No children,One or more children,All
+Children (youngest 15-17),All,No children,No children,One or more children
