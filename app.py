@@ -622,12 +622,10 @@ def assign_quality_release_code(n, cv, geographic_level='national'):
     """
     Assign quality release code based on sample size (n), CV, and geographic level.
     
-    Based on Statistics Canada quality release guidelines:
+    Based on Statistics Canada Time Use Survey 2022 User Guide, Table 9.3 (Rules 2.1, 2.2, 2.3):
     - A: Acceptable (good quality)
-    - B: Marginal (use with caution)
-    - C: Unacceptable (suppress)
+    - E: Use with caution (marginal quality)
     - F: Too unreliable to publish
-    - X: Suppressed for confidentiality (n < 10)
     
     Parameters:
     n: sample size (unweighted count)
@@ -635,72 +633,41 @@ def assign_quality_release_code(n, cv, geographic_level='national'):
     geographic_level: 'national', 'region', 'province', 'multi_region', 'multi_province'
     
     Returns:
-    Quality release code (A, B, C, F, or X)
+    Quality release code (A, E, or F)
     """
     # Handle missing or invalid values
     if pd.isna(n) or pd.isna(cv) or n < 0 or cv < 0:
         return 'F'
     
-    # Confidentiality suppression: n < 10
+    # Rule 2.3: Too unreliable to publish (F)
+    # - n < 10 (confidentiality suppression)
+    # - n >= 10 but CV > 33.3%
     if n < 10:
-        return 'X'
+        return 'F'
     
-    # Determine thresholds based on geographic level
-    # More lenient thresholds for national level, stricter for sub-national
-    if geographic_level == 'national':
-        # National level thresholds
-        if n >= 30:
-            if cv <= 16.5:
-                return 'A'
-            elif cv <= 33.3:
-                return 'B'
-            else:
-                return 'C'
-        elif n >= 10:
-            if cv <= 16.5:
-                return 'B'
-            elif cv <= 33.3:
-                return 'C'
-            else:
-                return 'F'
+    if n >= 10 and cv > 33.3:
+        return 'F'
+    
+    # Rule 2.1: Acceptable (A)
+    # - n >= 30 and CV <= 16.5%
+    if n >= 30 and cv <= 16.5:
+        return 'A'
+    
+    # Rule 2.2: Use with caution (E)
+    # - n >= 30 and 16.5% < CV <= 33.3%
+    # - n >= 10 and n < 30 and CV <= 16.5%
+    # - n >= 10 and n < 30 and 16.5% < CV <= 33.3%
+    if n >= 30 and cv > 16.5 and cv <= 33.3:
+        return 'E'
+    
+    if n >= 10 and n < 30:
+        if cv <= 33.3:
+            return 'E'
         else:
             return 'F'
-    elif geographic_level in ['region', 'province']:
-        # Regional/Provincial level thresholds (stricter)
-        if n >= 30:
-            if cv <= 16.5:
-                return 'A'
-            elif cv <= 33.3:
-                return 'B'
-            else:
-                return 'C'
-        elif n >= 10:
-            if cv <= 16.5:
-                return 'B'
-            elif cv <= 33.3:
-                return 'C'
-            else:
-                return 'F'
-        else:
-            return 'F'
-    else:
-        # Multi-region or multi-province (use national thresholds)
-        if n >= 30:
-            if cv <= 16.5:
-                return 'A'
-            elif cv <= 33.3:
-                return 'B'
-            else:
-                return 'C'
-        elif n >= 10:
-            if cv <= 16.5:
-                return 'B'
-            elif cv <= 33.3:
-                return 'C'
-            else:
-                return 'F'
-        else:
-            return 'F'
+    
+    # Default to F if we get here
+    return 'F'
 
 def format_option_label(var_name, value):
     """Format option label for selectbox"""
@@ -1425,10 +1392,18 @@ def main():
             
             results_df = pd.DataFrame(all_results)
             
-            # Round numeric columns
+            # Round numeric columns (but preserve quality release codes and sample size)
             for col in results_df.columns:
                 if col not in ['Gender', 'Age Group', 'Main activity - Last Week', 'Children in Household', 'Spouse in Household']:
-                    results_df[col] = pd.to_numeric(results_df[col], errors='coerce').round(2)
+                    if 'Quality Release Code' in col:
+                        # Keep quality release codes as strings
+                        continue
+                    elif 'Sample Size' in col or '(n)' in col:
+                        # Convert sample size to integer
+                        results_df[col] = pd.to_numeric(results_df[col], errors='coerce').fillna(0).astype(int)
+                    else:
+                        # Round other numeric columns
+                        results_df[col] = pd.to_numeric(results_df[col], errors='coerce').round(2)
             
             # Store in session state
             st.session_state.all_groups_results = results_df
@@ -1487,8 +1462,14 @@ def main():
             try:
                 from io import BytesIO
                 output = BytesIO()
+                # Ensure quality release codes are strings before exporting
+                export_df = results_df.copy()
+                for col in export_df.columns:
+                    if 'Quality Release Code' in col:
+                        export_df[col] = export_df[col].astype(str)
+                
                 with pd.ExcelWriter(output, engine='openpyxl') as writer:
-                    results_df.to_excel(writer, sheet_name='All Groups Results', index=False)
+                    export_df.to_excel(writer, sheet_name='All Groups Results', index=False)
                 output.seek(0)
                 excel_data = output.read()
                 
@@ -1507,17 +1488,21 @@ def main():
                 st.warning(f"Excel export not available: {e}")
     
     # Quality Release Code Information
-    with st.expander("ℹ️ Quality Release Code Guidelines"):
+    with st.expander("ℹ️ Quality Release Code Guidelines (Table 9.3)"):
         st.markdown("""
-        **Quality Release Codes** are assigned based on sample size (n), coefficient of variation (CV), and geographic level:
+        **Quality Release Codes** are assigned based on sample size (n) and coefficient of variation (CV) 
+        according to Statistics Canada Time Use Survey 2022 User Guide, Table 9.3:
         
-        - **A**: Acceptable (good quality) - n ≥ 30 and CV ≤ 16.5%
-        - **B**: Marginal (use with caution) - n ≥ 30 and 16.5% < CV ≤ 33.3%, or n ≥ 10 and CV ≤ 16.5%
-        - **C**: Unacceptable (suppress) - n ≥ 30 and CV > 33.3%, or n ≥ 10 and 16.5% < CV ≤ 33.3%
-        - **F**: Too unreliable to publish - n ≥ 10 and CV > 33.3%, or n < 10
-        - **X**: Suppressed for confidentiality - n < 10
+        **Rule 2.1 - Acceptable (A)**:
+        - n ≥ 30 and CV ≤ 16.5%
         
-        Note: Thresholds may vary slightly by geographic level (national vs. regional/provincial).
+        **Rule 2.2 - Use with caution (E)**:
+        - n ≥ 30 and 16.5% < CV ≤ 33.3%
+        - n ≥ 10 and n < 30 and CV ≤ 33.3%
+        
+        **Rule 2.3 - Too unreliable to publish (F)**:
+        - n < 10 (confidentiality suppression)
+        - n ≥ 10 and CV > 33.3%
         """)
     
     # Display results
