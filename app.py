@@ -618,19 +618,95 @@ def get_geographic_level(filters):
             return 'multi_province'
     return 'national'
 
-def assign_quality_release_code(n, cv, geographic_level='national'):
+def get_quality_rule(filters):
     """
-    Assign quality release code based on sample size (n), CV, and geographic level.
+    Determine which quality release rule (2.1, 2.2, or 2.3) applies based on geography.
     
-    Based on Statistics Canada Time Use Survey 2022 User Guide, Table 9.3 (Rules 2.1, 2.2, 2.3):
-    - A: Acceptable (good quality)
-    - E: Use with caution (marginal quality)
-    - F: Too unreliable to publish
+    Rules from Table 9.3:
+    - Rule 2.1: QC, ON, BC (Quebec, Ontario, British Columbia)
+    - Rule 2.2: Prairies, Canada (national)
+    - Rule 2.3: Atlantic
+    
+    Returns: 'rule_2.1', 'rule_2.2', or 'rule_2.3'
+    """
+    # Check province filters first
+    if 'PRV' in filters and filters['PRV'] is not None:
+        if isinstance(filters['PRV'], list):
+            provinces = filters['PRV']
+        else:
+            provinces = [filters['PRV']]
+        
+        # Rule 2.1: Quebec (24), Ontario (35), British Columbia (59)
+        rule_2_1_provinces = [24, 35, 59]
+        # Rule 2.3: Atlantic provinces (10, 11, 12, 13)
+        rule_2_3_provinces = [10, 11, 12, 13]
+        # Rule 2.2: Prairie provinces (46, 47, 48)
+        rule_2_2_provinces = [46, 47, 48]
+        
+        if len(provinces) == 1:
+            if provinces[0] in rule_2_1_provinces:
+                return 'rule_2.1'
+            elif provinces[0] in rule_2_3_provinces:
+                return 'rule_2.3'
+            elif provinces[0] in rule_2_2_provinces:
+                return 'rule_2.2'
+    
+    # Check region filters
+    if 'REGION' in filters and filters['REGION'] is not None:
+        if isinstance(filters['REGION'], list):
+            regions = filters['REGION']
+        else:
+            regions = [filters['REGION']]
+        
+        # Normalize region values to integers for comparison
+        normalized_regions = []
+        for r in regions:
+            if isinstance(r, str) and r.isdigit():
+                normalized_regions.append(int(r))
+            elif isinstance(r, int):
+                normalized_regions.append(r)
+            else:
+                normalized_regions.append(r)
+        
+        # Rule 2.1: Quebec (2), Ontario (3), British Columbia (5)
+        rule_2_1_regions = [2, 3, 5]
+        # Rule 2.3: Atlantic (1)
+        rule_2_3_regions = [1]
+        # Rule 2.2: Prairie (4)
+        rule_2_2_regions = [4]
+        
+        if len(normalized_regions) == 1:
+            region_val = normalized_regions[0]
+            if region_val in rule_2_1_regions:
+                return 'rule_2.1'
+            elif region_val in rule_2_3_regions:
+                return 'rule_2.3'
+            elif region_val in rule_2_2_regions:
+                return 'rule_2.2'
+    
+    # Default: Rule 2.2 for Canada (national)
+    return 'rule_2.2'
+
+def assign_quality_release_code(n, cv, quality_rule='rule_2.2'):
+    """
+    Assign quality release code based on sample size (n), CV, and quality rule from Table 9.3.
+    
+    Based on Statistics Canada Time Use Survey 2022 User Guide, Table 9.3:
+    - A: Acceptable (good quality) - Category A (no warning)
+    - E: Use with caution (marginal quality) - Category E (warning)
+    - F: Too unreliable to publish - Category F (suppress)
+    
+    Rules:
+    - Rule 2.1 (QC, ON, BC): A if n ≥ 150 and CV ≤ 25%, F if n < 75 or CV > 50%
+    - Rule 2.2 (Prairies, Canada): A if n ≥ 180 and CV ≤ 25%, F if n < 90 or CV > 50%
+    - Rule 2.3 (Atlantic): A if n ≥ 240 and CV ≤ 25%, F if n < 120 or CV > 50%
+    
+    Category E: Not A and Not F (all other cases)
     
     Parameters:
     n: sample size (unweighted count)
     cv: coefficient of variation (percentage)
-    geographic_level: 'national', 'region', 'province', 'multi_region', 'multi_province'
+    quality_rule: 'rule_2.1', 'rule_2.2', or 'rule_2.3'
     
     Returns:
     Quality release code (A, E, or F)
@@ -639,35 +715,39 @@ def assign_quality_release_code(n, cv, geographic_level='national'):
     if pd.isna(n) or pd.isna(cv) or n < 0 or cv < 0:
         return 'F'
     
-    # Rule 2.3: Too unreliable to publish (F)
-    # - n < 10 (confidentiality suppression)
-    # - n >= 10 but CV > 33.3%
-    if n < 10:
+    # Determine thresholds based on rule
+    if quality_rule == 'rule_2.1':
+        # Rule 2.1: QC, ON, BC
+        n_threshold_a = 150
+        n_threshold_f = 75
+        cv_threshold_a = 25.0
+        cv_threshold_f = 50.0
+    elif quality_rule == 'rule_2.3':
+        # Rule 2.3: Atlantic
+        n_threshold_a = 240
+        n_threshold_f = 120
+        cv_threshold_a = 25.0
+        cv_threshold_f = 50.0
+    else:
+        # Rule 2.2: Prairies, Canada (default)
+        n_threshold_a = 180
+        n_threshold_f = 90
+        cv_threshold_a = 25.0
+        cv_threshold_f = 50.0
+    
+    # Category F: Too unreliable to publish (suppress)
+    # - n < threshold_f OR CV > 50%
+    if n < n_threshold_f or cv > cv_threshold_f:
         return 'F'
     
-    if n >= 10 and cv > 33.3:
-        return 'F'
-    
-    # Rule 2.1: Acceptable (A)
-    # - n >= 30 and CV <= 16.5%
-    if n >= 30 and cv <= 16.5:
+    # Category A: Acceptable (no warning)
+    # - n ≥ threshold_a AND CV ≤ 25%
+    if n >= n_threshold_a and cv <= cv_threshold_a:
         return 'A'
     
-    # Rule 2.2: Use with caution (E)
-    # - n >= 30 and 16.5% < CV <= 33.3%
-    # - n >= 10 and n < 30 and CV <= 16.5%
-    # - n >= 10 and n < 30 and 16.5% < CV <= 33.3%
-    if n >= 30 and cv > 16.5 and cv <= 33.3:
-        return 'E'
-    
-    if n >= 10 and n < 30:
-        if cv <= 33.3:
-            return 'E'
-        else:
-            return 'F'
-    
-    # Default to F if we get here
-    return 'F'
+    # Category E: Use with caution (warning)
+    # - Not A and Not F (all other cases)
+    return 'E'
 
 def format_option_label(var_name, value):
     """Format option label for selectbox"""
@@ -1035,8 +1115,8 @@ def main():
             overall_status_text.empty()
             return
         
-        # Get geographic level for quality release codes
-        geographic_level = get_geographic_level(filters)
+        # Get quality rule for quality release codes
+        quality_rule = get_quality_rule(filters)
         
         # Calculate for each DUR variable
         progress_bar = st.progress(0)
@@ -1055,7 +1135,7 @@ def main():
             n = calculate_sample_size(filtered_df, var)
             
             # Assign quality release code
-            quality_code = assign_quality_release_code(n, cv, geographic_level)
+            quality_code = assign_quality_release_code(n, cv, quality_rule)
             
             # Find category
             category = "Other"
@@ -1115,7 +1195,7 @@ def main():
             n = calculate_sample_size(filtered_df, '_CAT_SUM')
             
             # Assign quality release code
-            quality_code = assign_quality_release_code(n, cv, geographic_level)
+            quality_code = assign_quality_release_code(n, cv, quality_rule)
             
             category_results_list.append({
                 'Activity Category': category,
@@ -1281,8 +1361,8 @@ def main():
                 # Apply filters
                 combo_filtered_df = filter_data(df, combo_filters)
                 
-                # Get geographic level for this combination
-                combo_geographic_level = get_geographic_level(combo_filters)
+                # Get quality rule for this combination
+                combo_quality_rule = get_quality_rule(combo_filters)
                 
                 if len(combo_filtered_df) == 0:
                     # No records for this combination - still add row with NaN values
@@ -1335,7 +1415,7 @@ def main():
                         n = calculate_sample_size(working_df, cat_sum_col)
                         
                         # Assign quality release code
-                        quality_code = assign_quality_release_code(n, cv, combo_geographic_level)
+                        quality_code = assign_quality_release_code(n, cv, combo_quality_rule)
                         
                         category_estimates[category] = {'mean': mean_est, 'cv': cv, 'n': n, 'quality_code': quality_code}
                         if not np.isnan(mean_est):
@@ -1354,7 +1434,7 @@ def main():
                     # Calculate total sample size (minimum n across all categories, or use a representative category)
                     # For total, we'll use the maximum n from categories as a proxy
                     total_n = max([cat.get('n', 0) for cat in category_estimates.values()], default=0)
-                    total_quality_code = assign_quality_release_code(total_n, total_cv, combo_geographic_level)
+                    total_quality_code = assign_quality_release_code(total_n, total_cv, combo_quality_rule)
                     
                     # Build row data
                     row_data = {
@@ -1493,16 +1573,21 @@ def main():
         **Quality Release Codes** are assigned based on sample size (n) and coefficient of variation (CV) 
         according to Statistics Canada Time Use Survey 2022 User Guide, Table 9.3:
         
-        **Rule 2.1 - Acceptable (A)**:
-        - n ≥ 30 and CV ≤ 16.5%
+        **Category A (no warning)**: n ≥ threshold AND CV ≤ 25%
+        **Category E (warning)**: Not A and Not F (all other cases)
+        **Category F (suppress)**: n < threshold OR CV > 50%
         
-        **Rule 2.2 - Use with caution (E)**:
-        - n ≥ 30 and 16.5% < CV ≤ 33.3%
-        - n ≥ 10 and n < 30 and CV ≤ 33.3%
+        **Rule 2.1** (Quebec, Ontario, British Columbia):
+        - Category A: n ≥ 150 and CV ≤ 25%
+        - Category F: n < 75 or CV > 50%
         
-        **Rule 2.3 - Too unreliable to publish (F)**:
-        - n < 10 (confidentiality suppression)
-        - n ≥ 10 and CV > 33.3%
+        **Rule 2.2** (Prairies, Canada):
+        - Category A: n ≥ 180 and CV ≤ 25%
+        - Category F: n < 90 or CV > 50%
+        
+        **Rule 2.3** (Atlantic):
+        - Category A: n ≥ 240 and CV ≤ 25%
+        - Category F: n < 120 or CV > 50%
         """)
     
     # Display results
